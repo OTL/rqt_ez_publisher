@@ -1,0 +1,17 @@
+<library path="src">
+  <class name="EzPublisher" type="rqt_ez_publisher.ez_publisher.EzPublisherPlugin" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      An example Python GUI plugin to create a great user interface.
+    </description>
+    <qtgui>
+      <group>
+        <label>Topics</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to ROS topics.</statustip>
+      </group>
+      <label>Easy Message Publisher</label>
+      <icon type="theme">stock_up</icon>
+      <statustip>GUI plugin for easy publishing ROS messages.</statustip>
+    </qtgui>
+  </class>
+</library>
