@@ -26,15 +26,20 @@ class EzPublisherPlugin(Plugin):
         #self._widget.shutdown()
 
     def save_settings(self, plugin_settings, instance_settings):
-        rospy.loginfo('saved %s'%self._widget.get_texts())
-        instance_settings.set_value('texts', self._widget.get_texts())
-
+        instance_settings.set_value('texts', [x.get_text() for x in self._widget.get_sliders()])
+        for slider in self._widget.get_sliders():
+            instance_settings.set_value(
+                slider.get_text() + '_range', slider.get_range())
 
     def restore_settings(self, plugin_settings, instance_settings):
         texts = instance_settings.value('texts')
         if texts:
             for text in texts:
                 self._widget.add_slider_by_text(text)
+        for slider in self._widget.get_sliders():
+            r = instance_settings.value(slider.get_text() + '_range')
+            slider.set_range(r)
+
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure
