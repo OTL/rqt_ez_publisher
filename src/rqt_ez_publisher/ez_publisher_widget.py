@@ -5,10 +5,25 @@ import sys
 from python_qt_binding import QtGui
 from python_qt_binding.QtCore import Qt
 
+def make_topic_strings(t, string=''):
+    try:
+        return [make_topic_strings(t.__getattribute__(slot), string + '/' + slot) for slot in t.__slots__]
+    except AttributeError, e:
+        return string
+
+def flatten(L):
+    if isinstance(L, list):
+       return reduce(lambda a,b: a + flatten(b), L, [])
+    else:
+        return [L]
+
 
 def find_topic_name(full_text, topic_dict):
     if full_text[0] != '/':
         full_text = '/' + full_text
+    # This is topic
+    if full_text in topic_dict:
+        return (full_text, None)
     splited_text = full_text.split('/')[1:]
     topic_name = ''
     while not topic_name in topic_dict and splited_text:
@@ -53,6 +68,11 @@ class BoolValueWidget(ValueWidget):
         self._check_box.stateChanged.connect(self.state_changed)
         self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self._check_box)
+        close_button = QtGui.QPushButton('x')
+        close_button.clicked.connect(self.close)
+        self._horizontal_layout.addWidget(close_button)
+        self.close_button = QtGui.QPushButton('x')
+        self._horizontal_layout.addWidget(self.close_button)
         self.setLayout(self._horizontal_layout)
 
 class StringValueWidget(ValueWidget):
@@ -69,6 +89,8 @@ class StringValueWidget(ValueWidget):
         self._line_edit.returnPressed.connect(self.input_text)
         self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self._line_edit)
+        self.close_button = QtGui.QPushButton('x')
+        self._horizontal_layout.addWidget(self.close_button)
         self.setLayout(self._horizontal_layout)
 
 
@@ -103,6 +125,9 @@ class IntValueWidget(ValueWidget):
         self._horizontal_layout.addWidget(self._slider)
         self._horizontal_layout.addWidget(self._max_spin_box)
         self._horizontal_layout.addWidget(self._lcd)
+        self.close_button = QtGui.QPushButton('x')
+        self._horizontal_layout.addWidget(self.close_button)
+
         self.setLayout(self._horizontal_layout)
 
 
@@ -136,6 +161,9 @@ class DoubleValueWidget(ValueWidget):
         self._horizontal_layout.addWidget(self._slider)
         self._horizontal_layout.addWidget(self._max_spin_box)
         self._horizontal_layout.addWidget(self._lcd)
+        self.close_button = QtGui.QPushButton('x')
+        self._horizontal_layout.addWidget(self.close_button)
+
         self.setLayout(self._horizontal_layout)
 
 
@@ -143,6 +171,7 @@ class EasyPublisherWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self.setup_ui()
+        self._sliders = []
         # model
         self._publishers = {}
         self._messages = {}
@@ -151,26 +180,26 @@ class EasyPublisherWidget(QtGui.QWidget):
     def add_slider(self):
         self.add_slider_by_text(str(self._line_edit.text()))
 
+    def close_slider(self, widget):
+        widget.hide()
+        self._main_vertical_layout.removeWidget(widget)
+
     def add_widget(self, output_type, topic_name, attributes):
-        if output_type == float:
-            self._main_vertical_layout.addWidget(
-                DoubleValueWidget(topic_name, attributes, self._messages[topic_name], self._publishers[topic_name]))
-            return True
-        elif output_type == int:
-            self._main_vertical_layout.addWidget(
-                IntValueWidget(topic_name, attributes, self._messages[topic_name], self._publishers[topic_name]))
-            return True
-        elif output_type == bool:
-            self._main_vertical_layout.addWidget(
-                BoolValueWidget(topic_name, attributes, self._messages[topic_name], self._publishers[topic_name]))
-            return True
-        elif output_type == str:
-            self._main_vertical_layout.addWidget(
-                StringValueWidget(topic_name, attributes, self._messages[topic_name], self._publishers[topic_name]))
-            return True
+        widget_class = None
+        type_class_dict = {float: DoubleValueWidget,
+                           int: IntValueWidget,
+                           bool: BoolValueWidget,
+                           str: StringValueWidget}
+        if output_type in type_class_dict:
+            widget_class = type_class_dict[output_type]
         else:
-            rospy.logerr('not supported type %s'%type(message_target))
-        return False
+            rospy.logerr('not supported type %s'%output_type)
+            return False
+        widget = widget_class(topic_name, attributes, self._messages[topic_name], self._publishers[topic_name])
+        self._sliders.append(widget)
+        widget.close_button.clicked.connect(lambda x: self.close_slider(widget))
+        self._main_vertical_layout.addWidget(widget)
+        return True
         
     def add_slider_by_text(self, text):
         _, _, topic_types = rospy.get_master().getTopicTypes()
@@ -185,18 +214,26 @@ class EasyPublisherWidget(QtGui.QWidget):
             self._publishers[topic_name] = rospy.Publisher(topic_name, message_class)
         if not topic_name in self._messages:
             self._messages[topic_name] = message_class()
-        message_target = self._messages[topic_name]
-        try:
-            for attr in attributes:
-                message_target = message_target.__getattribute__(attr)
-        except AttributeError, e:
-            rospy.logerr(e)
-            return
-        if self.add_widget(type(message_target), topic_name, attributes):
-            self._texts.append(text)
+        if not attributes:
+            for break_down_string in flatten(make_topic_strings(self._messages[topic_name], topic_name)):
+                self.add_slider_by_text(break_down_string)
+        else:
+            message_target = self._messages[topic_name]
+            try:
+                for attr in attributes:
+                    message_target = message_target.__getattribute__(attr)
+            except AttributeError, e:
+                rospy.logerr(e)
+                return
+            if self.add_widget(type(message_target), topic_name, attributes):
+                self._texts.append(text)
 
     def get_texts(self):
         return self._texts
+
+    def clear_sliders(self):
+        for widget in self._sliders:
+            self.close_slider(widget)
 
     def setup_ui(self):
         horizontal_layout = QtGui.QHBoxLayout()
@@ -205,9 +242,9 @@ class EasyPublisherWidget(QtGui.QWidget):
         self._line_edit = QtGui.QLineEdit()
         self._line_edit.returnPressed.connect(self.add_slider)
         horizontal_layout.addWidget(self._line_edit)
-        add_button = QtGui.QPushButton('+')
-        horizontal_layout.addWidget(add_button)
-        add_button.clicked.connect(self.add_slider)
+        clear_button = QtGui.QPushButton('x')
+        horizontal_layout.addWidget(clear_button)
+        clear_button.clicked.connect(self.clear_sliders)
         self._main_vertical_layout = QtGui.QVBoxLayout()
         self._main_vertical_layout.addLayout(horizontal_layout)
         self._main_vertical_layout.setAlignment(horizontal_layout, Qt.AlignTop)
