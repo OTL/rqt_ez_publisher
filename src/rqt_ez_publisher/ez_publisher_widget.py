@@ -1,5 +1,7 @@
+import re
 import rospy
 import roslib.message
+import roslib.msgs
 import sys
 
 from python_qt_binding import QtGui
@@ -23,25 +25,60 @@ def find_topic_name(full_text, topic_dict):
         full_text = '/' + full_text
     # This is topic
     if full_text in topic_dict:
-        return (full_text, None)
+        return (full_text, None, None)
     splited_text = full_text.split('/')[1:]
     topic_name = ''
     while not topic_name in topic_dict and splited_text:
         topic_name += '/' + splited_text[0]
         splited_text = splited_text[1:]
     if splited_text:
-        return (topic_name, splited_text)
+        m = re.search('(\w+)\[([0-9]+)\]', splited_text[-1])
+        if m:
+            splited_text[-1] = m.group(1)
+            return (topic_name, splited_text, int(m.group(2)))
+        else:
+            return (topic_name, splited_text, None)
     else:
-        return (None, None)
+        return (None, None, None)
+
+
+def get_value_type(topic_type_str, attributes):
+    if not attributes:
+        return (None, False)
+    try:
+        _, spec = roslib.msgs.load_by_type(topic_type_str)
+    except roslib.msgs.MsgSpecException, e:
+        return (None, False)
+    try:
+        index = spec.names.index(attributes[0])
+        field = spec.parsed_fields()[index]
+        attr_type = field.base_type
+        if field.is_builtin:
+            if attr_type in ['int32', 'uint32', 'uint64', 'uint64', 
+                             'int8', 'uint8', 'int16', 'uint16']:
+                return (int, field.is_array)
+            elif attr_type in ['float32', 'float64']:
+                return (float, field.is_array)
+            elif attr_type == 'string':
+                return (str, field.is_array)
+            elif attr_type == 'bool':
+                return (bool, field.is_array)
+        else:
+            return get_value_type(field.base_type, attributes[1:])
+    except ValueError, e:
+        return (None, False)
 
         
 class ValueWidget(QtGui.QWidget):
-    def __init__(self, topic_name, attributes, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self._attributes = attributes
         self._publisher = publisher
         self._message = message
+        self._array_index = array_index
         self._text = topic_name + '/' + '/'.join(attributes)
+        if self._array_index != None:
+            self._text += '[%d]'%self._array_index
         self.setup_ui(self._text)
 
     def get_text(self):
@@ -49,9 +86,17 @@ class ValueWidget(QtGui.QWidget):
 
     def publish_value(self, value):
         message_target = self._message
-        for attr in self._attributes[:-1]:
-            message_target = message_target.__getattribute__(attr)
-        message_target.__setattr__(self._attributes[-1], value)
+        if len(self._attributes) >= 2:
+            for attr in self._attributes[:-1]:
+                message_target = message_target.__getattribute__(attr)
+        if self._array_index != None:
+            array = message_target.__getattribute__(self._attributes[-1])
+            while len(array) <= self._array_index:
+                array.append(self._type())
+            array[self._array_index] = value
+            message_target.__setattr__(self._attributes[-1], array)
+        else:
+            message_target.__setattr__(self._attributes[-1], value)
         self._publisher.publish(self._message)
 
     def setup_ui(self, name):
@@ -65,8 +110,9 @@ class ValueWidget(QtGui.QWidget):
 
 
 class BoolValueWidget(ValueWidget):
-    def __init__(self, topic_name, attributes, message, publisher, parent=None):
-        ValueWidget.__init__(self, topic_name, attributes, message, publisher, parent=parent)
+    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+        self._type = bool
+        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def state_changed(self, state):
         self.publish_value(self._check_box.isChecked())
@@ -85,8 +131,9 @@ class BoolValueWidget(ValueWidget):
 
 
 class StringValueWidget(ValueWidget):
-    def __init__(self, topic_name, attributes, message, publisher, parent=None):
-        ValueWidget.__init__(self, topic_name, attributes, message, publisher, parent=parent)
+    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+        self._type = str
+        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def input_text(self):
         self.publish_value(str(self._line_edit.text()))
@@ -105,8 +152,9 @@ class StringValueWidget(ValueWidget):
 
 
 class IntValueWidget(ValueWidget):
-    def __init__(self, topic_name, attributes, message, publisher, parent=None):
-        ValueWidget.__init__(self, topic_name, attributes, message, publisher, parent=parent)
+    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+        self._type = int
+        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def slider_changed(self, value):
         self._lcd.display(value)
@@ -153,8 +201,9 @@ class IntValueWidget(ValueWidget):
 
 
 class DoubleValueWidget(ValueWidget):
-    def __init__(self, topic_name, attributes, message, publisher, parent=None):
-        ValueWidget.__init__(self, topic_name, attributes, message, publisher, parent=parent)
+    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+        self._type = float
+        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def set_value(self, value):
         self._lcd.display(value)
@@ -224,7 +273,7 @@ class EasyPublisherWidget(QtGui.QWidget):
         self._sliders.remove(widget)
         self._main_vertical_layout.removeWidget(widget)
 
-    def add_widget(self, output_type, topic_name, attributes):
+    def add_widget(self, output_type, topic_name, attributes, array_index):
         widget_class = None
         type_class_dict = {float: DoubleValueWidget,
                            int: IntValueWidget,
@@ -235,16 +284,19 @@ class EasyPublisherWidget(QtGui.QWidget):
         else:
             rospy.logerr('not supported type %s'%output_type)
             return False
-        widget = widget_class(topic_name, attributes, self._messages[topic_name], self._publishers[topic_name])
+        widget = widget_class(topic_name, attributes, array_index, self._messages[topic_name], self._publishers[topic_name])
         self._sliders.append(widget)
         widget.close_button.clicked.connect(lambda x: self.close_slider(widget))
         self._main_vertical_layout.addWidget(widget)
         return True
-        
+
     def add_slider_by_text(self, text):
+        if text in [x.get_text() for x in self._sliders]:
+            rospy.logwarn('%s is already exists'%text)
+            return
         _, _, topic_types = rospy.get_master().getTopicTypes()
         topic_dict = dict(topic_types)
-        topic_name, attributes = find_topic_name(text, topic_dict)
+        topic_name, attributes, array_index = find_topic_name(text, topic_dict)
         if not topic_name:
             rospy.logerr('%s not found'%text)
             return
@@ -254,18 +306,18 @@ class EasyPublisherWidget(QtGui.QWidget):
             self._publishers[topic_name] = rospy.Publisher(topic_name, message_class)
         if not topic_name in self._messages:
             self._messages[topic_name] = message_class()
+        builtin_type = None
+        is_array = None
         if not attributes:
             for break_down_string in flatten(make_topic_strings(self._messages[topic_name], topic_name)):
                 self.add_slider_by_text(break_down_string)
         else:
-            message_target = self._messages[topic_name]
-            try:
-                for attr in attributes:
-                    message_target = message_target.__getattribute__(attr)
-            except AttributeError, e:
-                rospy.logerr(e)
-                return
-            self.add_widget(type(message_target), topic_name, attributes)
+            builtin_type, is_array = get_value_type(topic_type_str, attributes)
+        if builtin_type:
+            if is_array and array_index == None:
+                rospy.logerr('this is array, please specify index by [index]')
+            else:
+                self.add_widget(builtin_type, topic_name, attributes, array_index)
 
     def get_sliders(self):
         return self._sliders
