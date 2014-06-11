@@ -54,9 +54,10 @@ def get_value_type(topic_type_str, attributes):
         field = spec.parsed_fields()[index]
         attr_type = field.base_type
         if field.is_builtin:
-            if attr_type in ['int32', 'uint32', 'uint64', 'uint64', 
-                             'int8', 'uint8', 'int16', 'uint16']:
+            if attr_type in ['int8', 'int16', 'int32', 'int64']:
                 return (int, field.is_array)
+            if attr_type in ['uint8', 'uint16', 'uint32', 'uint64']:
+                return ('uint', field.is_array)
             elif attr_type in ['float32', 'float64']:
                 return (float, field.is_array)
             elif attr_type == 'string':
@@ -67,8 +68,14 @@ def get_value_type(topic_type_str, attributes):
             return get_value_type(field.base_type, attributes[1:])
     except ValueError, e:
         return (None, False)
+    return (None, False)
 
-        
+def make_text(topic_name, attributes, array_index):
+    text = topic_name + '/' + '/'.join(attributes)
+    if array_index != None:
+        text += '[%d]'%array_index
+    return text
+
 class ValueWidget(QtGui.QWidget):
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
@@ -76,9 +83,19 @@ class ValueWidget(QtGui.QWidget):
         self._publisher = publisher
         self._message = message
         self._array_index = array_index
-        self._text = topic_name + '/' + '/'.join(attributes)
+        self._text = make_text(topic_name, attributes, array_index)
+        self._horizontal_layout = QtGui.QHBoxLayout()
+        topic_label = QtGui.QLabel(self._text)
+        self.close_button = QtGui.QPushButton('x')
+        self.close_button.setMaximumWidth(30)
+        self._horizontal_layout.addWidget(self.close_button)
+        self._horizontal_layout.addWidget(topic_label)
         if self._array_index != None:
-            self._text += '[%d]'%self._array_index
+            self.add_button = QtGui.QPushButton('+')
+            self.add_button.setMaximumWidth(30)
+            self._horizontal_layout.addWidget(self.add_button)
+        else:
+            self.add_button = None
         self.setup_ui(self._text)
 
     def get_text(self):
@@ -118,14 +135,8 @@ class BoolValueWidget(ValueWidget):
         self.publish_value(self._check_box.isChecked())
 
     def setup_ui(self, name):
-        self._horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel(name)
         self._check_box = QtGui.QCheckBox()
         self._check_box.stateChanged.connect(self.state_changed)
-        self.close_button = QtGui.QPushButton('x')
-        self.close_button.setMaximumWidth(30)
-        self._horizontal_layout.addWidget(self.close_button)
-        self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self._check_box)
         self.setLayout(self._horizontal_layout)
 
@@ -139,14 +150,8 @@ class StringValueWidget(ValueWidget):
         self.publish_value(str(self._line_edit.text()))
 
     def setup_ui(self, name):
-        self._horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel(name)
         self._line_edit = QtGui.QLineEdit()
         self._line_edit.returnPressed.connect(self.input_text)
-        self.close_button = QtGui.QPushButton('x')
-        self.close_button.setMaximumWidth(30)
-        self._horizontal_layout.addWidget(self.close_button)
-        self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self._line_edit)
         self.setLayout(self._horizontal_layout)
 
@@ -161,8 +166,6 @@ class IntValueWidget(ValueWidget):
         self.publish_value(value)
 
     def setup_ui(self, name):
-        self._horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel(name)
         self._min_spin_box = QtGui.QSpinBox()
         self._min_spin_box.setMaximum(10000)
         self._min_spin_box.setMinimum(-10000)
@@ -180,10 +183,6 @@ class IntValueWidget(ValueWidget):
         self._slider.setValue(0)
         zero_button = QtGui.QPushButton('reset')
         zero_button.clicked.connect(lambda x: self._slider.setValue(0))
-        self.close_button = QtGui.QPushButton('x')
-        self.close_button.setMaximumWidth(30)
-        self._horizontal_layout.addWidget(self.close_button)
-        self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self._min_spin_box)
         self._horizontal_layout.addWidget(self._slider)
         self._horizontal_layout.addWidget(self._max_spin_box)
@@ -198,6 +197,38 @@ class IntValueWidget(ValueWidget):
     def set_range(self, r):
         self._min_spin_box.setValue(r[0])
         self._max_spin_box.setValue(r[1])
+
+
+class UIntValueWidget(IntValueWidget):
+    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+        self._type = int
+        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
+
+    def setup_ui(self, name):
+        self._min_spin_box = QtGui.QSpinBox()
+        self._min_spin_box.setMaximum(10000)
+        self._min_spin_box.setMinimum(0)
+        self._slider = QtGui.QSlider(Qt.Horizontal)
+        self._slider.setTickPosition(QtGui.QSlider.TicksBelow)
+        self._slider.valueChanged.connect(self.slider_changed)
+        self._max_spin_box = QtGui.QSpinBox()
+        self._max_spin_box.setMaximum(10000)
+        self._max_spin_box.setMinimum(0)
+        self._lcd = QtGui.QLCDNumber()
+        self._min_spin_box.valueChanged.connect(self._slider.setMinimum)
+        self._max_spin_box.valueChanged.connect(self._slider.setMaximum)
+        self._min_spin_box.setValue(0)
+        self._max_spin_box.setValue(10)
+        self._slider.setValue(0)
+        zero_button = QtGui.QPushButton('reset')
+        zero_button.clicked.connect(lambda x: self._slider.setValue(0))
+        self._horizontal_layout.addWidget(self._min_spin_box)
+        self._horizontal_layout.addWidget(self._slider)
+        self._horizontal_layout.addWidget(self._max_spin_box)
+        self._horizontal_layout.addWidget(self._lcd)
+        self._horizontal_layout.addWidget(zero_button)
+
+        self.setLayout(self._horizontal_layout)
 
 
 class DoubleValueWidget(ValueWidget):
@@ -219,8 +250,6 @@ class DoubleValueWidget(ValueWidget):
         self.set_value(self.slider_to_value(val))
 
     def setup_ui(self, name):
-        self._horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel(name)
         self._min_spin_box = QtGui.QDoubleSpinBox()
         self._min_spin_box.setMaximum(10000)
         self._min_spin_box.setMinimum(-10000)
@@ -236,10 +265,6 @@ class DoubleValueWidget(ValueWidget):
         self._slider.setValue(50)
         zero_button = QtGui.QPushButton('reset')
         zero_button.clicked.connect(lambda x: self._slider.setValue(self.value_to_slider(0.0)))
-        self.close_button = QtGui.QPushButton('x')
-        self.close_button.setMaximumWidth(30)
-        self._horizontal_layout.addWidget(self.close_button)
-        self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self._min_spin_box)
         self._horizontal_layout.addWidget(self._slider)
         self._horizontal_layout.addWidget(self._max_spin_box)
@@ -268,15 +293,28 @@ class EasyPublisherWidget(QtGui.QWidget):
     def add_slider(self):
         self.add_slider_by_text(str(self._line_edit.text()))
 
-    def close_slider(self, widget):
+    def add_slider_from_combo(self):
+        self.add_slider_by_text(str(self._combo.currentText()))
+
+    def close_slider(self, widget, remove=True):
         widget.hide()
-        self._sliders.remove(widget)
+        if remove:
+            self._sliders.remove(widget)
         self._main_vertical_layout.removeWidget(widget)
+
+    def get_next_index(self, output_type, topic_name, attributes):
+        array_index = 0
+        text = make_text(topic_name, attributes, array_index)
+        while text in [x.get_text() for x in self._sliders]:
+            array_index += 1
+            text = make_text(topic_name, attributes, array_index)
+        return array_index
 
     def add_widget(self, output_type, topic_name, attributes, array_index):
         widget_class = None
         type_class_dict = {float: DoubleValueWidget,
                            int: IntValueWidget,
+                           'uint': UIntValueWidget,
                            bool: BoolValueWidget,
                            str: StringValueWidget}
         if output_type in type_class_dict:
@@ -287,6 +325,9 @@ class EasyPublisherWidget(QtGui.QWidget):
         widget = widget_class(topic_name, attributes, array_index, self._messages[topic_name], self._publishers[topic_name])
         self._sliders.append(widget)
         widget.close_button.clicked.connect(lambda x: self.close_slider(widget))
+        if widget.add_button:
+            widget.add_button.clicked.connect(
+                lambda x: self.add_widget(output_type, topic_name, attributes, self.get_next_index(output_type, topic_name, attributes)))
         self._main_vertical_layout.addWidget(widget)
         return True
 
@@ -315,27 +356,33 @@ class EasyPublisherWidget(QtGui.QWidget):
             builtin_type, is_array = get_value_type(topic_type_str, attributes)
         if builtin_type:
             if is_array and array_index == None:
-                rospy.logerr('this is array, please specify index by [index]')
-            else:
-                self.add_widget(builtin_type, topic_name, attributes, array_index)
+                # use index 0
+                array_index = 0
+            self.add_widget(builtin_type, topic_name, attributes, array_index)
 
     def get_sliders(self):
         return self._sliders
         
     def clear_sliders(self):
         for widget in self._sliders:
-            self.close_slider(widget)
+            self.close_slider(widget, False)
+        self._sliders = []
 
     def setup_ui(self):
         horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel('topic/data (rqt_plot like)')
-        horizontal_layout.addWidget(topic_label)
-        self._line_edit = QtGui.QLineEdit()
-        self._line_edit.returnPressed.connect(self.add_slider)
-        horizontal_layout.addWidget(self._line_edit)
+        topic_label = QtGui.QLabel('topic/data')
         clear_button = QtGui.QPushButton('all clear')
-        horizontal_layout.addWidget(clear_button)
         clear_button.clicked.connect(self.clear_sliders)
+        self._combo = QtGui.QComboBox()
+        _, _, topic_types = rospy.get_master().getTopicTypes()
+        topics = [x[0] for x in topic_types]
+        self._combo.setEditable(True)
+        for topic in topics:
+            self._combo.addItem(topic)
+        self._combo.activated.connect(self.add_slider_from_combo)
+        horizontal_layout.addWidget(topic_label)
+        horizontal_layout.addWidget(self._combo)
+        horizontal_layout.addWidget(clear_button)
         self._main_vertical_layout = QtGui.QVBoxLayout()
         self._main_vertical_layout.addLayout(horizontal_layout)
         self._main_vertical_layout.setAlignment(horizontal_layout, Qt.AlignTop)
