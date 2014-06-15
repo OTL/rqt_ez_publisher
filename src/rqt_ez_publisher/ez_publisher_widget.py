@@ -1,7 +1,4 @@
-import re
 import rospy
-import roslib.message
-import roslib.msgs
 import sys
 
 from python_qt_binding import QtGui
@@ -229,12 +226,11 @@ class DoubleValueWidget(ValueWidget):
 class EasyPublisherWidget(QtGui.QWidget):
 
     def __init__(self, parent=None):
+        self._model = EasyPublisherModel()
+        self._sliders = []
         QtGui.QWidget.__init__(self, parent=parent)
         self.setup_ui()
-        self._sliders = []
-        # model
-        self._publishers = {}
-        self._messages = {}
+
 
     def add_slider(self):
         self.add_slider_by_text(str(self._line_edit.text()))
@@ -268,8 +264,10 @@ class EasyPublisherWidget(QtGui.QWidget):
         else:
             rospy.logerr('not supported type %s' % output_type)
             return False
-        widget = widget_class(topic_name, attributes, array_index, self._messages[
-                              topic_name], self._publishers[topic_name])
+        widget = widget_class(topic_name, attributes, array_index,
+                              self._model.get_message(topic_name),
+                              self._model.get_publisher(topic_name))
+                              
         self._sliders.append(widget)
         widget.close_button.clicked.connect(
             lambda x: self.close_slider(widget))
@@ -283,26 +281,11 @@ class EasyPublisherWidget(QtGui.QWidget):
         if text in [x.get_text() for x in self._sliders]:
             rospy.logwarn('%s is already exists' % text)
             return
-        _, _, topic_types = rospy.get_master().getTopicTypes()
-        topic_dict = dict(topic_types)
-        topic_name, attributes, array_index = find_topic_name(text, topic_dict)
-        if not topic_name:
-            rospy.logerr('%s not found' % text)
-            return
-        topic_type_str = topic_dict[topic_name]
-        message_class = roslib.message.get_message_class(topic_type_str)
-        if not topic_name in self._publishers:
-            self._publishers[topic_name] = rospy.Publisher(
-                topic_name, message_class)
-        if not topic_name in self._messages:
-            self._messages[topic_name] = message_class()
-        builtin_type = None
-        is_array = None
+        topic_name, attributes, builtin_type, is_array, array_index = self._model.resister_topic_by_text(text)
         if not attributes:
-            for break_down_string in flatten(make_topic_strings(self._messages[topic_name], topic_name)):
+            for break_down_string in self._model.get_topic_break_down_strings(topic_name):
                 self.add_slider_by_text(break_down_string)
-        else:
-            builtin_type, is_array = get_value_type(topic_type_str, attributes)
+            return
         if builtin_type:
             if is_array and array_index == None:
                 # use index 0
@@ -323,10 +306,8 @@ class EasyPublisherWidget(QtGui.QWidget):
         clear_button = QtGui.QPushButton('all clear')
         clear_button.clicked.connect(self.clear_sliders)
         self._combo = QtGui.QComboBox()
-        _, _, topic_types = rospy.get_master().getTopicTypes()
-        topics = [x[0] for x in topic_types]
         self._combo.setEditable(True)
-        for topic in topics:
+        for topic in self._model.get_topic_names():
             self._combo.addItem(topic)
         self._combo.activated.connect(self.add_slider_from_combo)
         horizontal_layout.addWidget(topic_label)
@@ -338,8 +319,7 @@ class EasyPublisherWidget(QtGui.QWidget):
         self.setLayout(self._main_vertical_layout)
 
     def shutdown(self):
-        for pub in self._publishers.values():
-            pub.unregister()
+        self._model.shutdown()
 
 
 def main():

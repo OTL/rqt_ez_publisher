@@ -2,7 +2,6 @@ import re
 import rospy
 import roslib.message
 import roslib.msgs
-import sys
 
 
 def make_topic_strings(t, string=''):
@@ -75,3 +74,57 @@ def make_text(topic_name, attributes, array_index):
     if array_index != None:
         text += '[%d]' % array_index
     return text
+
+
+class EasyPublisherModel(object):
+    
+    def __init__(self):
+        self._publishers = {}
+        self._messages = {}
+
+    def get_publisher(self, topic_name):
+        if topic_name in self._publishers:
+            return self._publishers[topic_name]
+        else:
+            return None
+
+    def get_message(self, topic_name):
+        if topic_name in self._messages:
+            return self._messages[topic_name]
+        else:
+            return None
+
+    def _add_publisher_if_not_exists(self, topic_name, message_class):
+        if not topic_name in self._publishers:
+            self._publishers[topic_name] = rospy.Publisher(
+                topic_name, message_class)
+
+    def _add_message_if_not_exists(self, topic_name, message_class):
+        if not topic_name in self._messages:
+            self._messages[topic_name] = message_class()
+
+    def get_topic_break_down_strings(self, topic_name):
+        return flatten(make_topic_strings(self._messages[topic_name],
+                                          topic_name))
+
+    def get_topic_names(self):
+        _, _, topic_types = rospy.get_master().getTopicTypes()
+        return [x[0] for x in topic_types]
+
+    def resister_topic_by_text(self, text):
+        _, _, topic_types = rospy.get_master().getTopicTypes()
+        topic_dict = dict(topic_types)
+        topic_name, attributes, array_index = find_topic_name(text, topic_dict)
+        if not topic_name:
+            rospy.logerr('%s not found' % text)
+            return
+        topic_type_str = topic_dict[topic_name]
+        message_class = roslib.message.get_message_class(topic_type_str)
+        self._add_publisher_if_not_exists(topic_name, message_class)
+        self._add_message_if_not_exists(topic_name, message_class)
+        builtin_type, is_array = get_value_type(topic_type_str, attributes)
+        return (topic_name, attributes, builtin_type, is_array, array_index)
+
+    def shutdown(self):
+        for pub in self._publishers.values():
+            pub.unregister()
