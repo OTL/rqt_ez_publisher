@@ -6,77 +6,11 @@ import sys
 
 from python_qt_binding import QtGui
 from python_qt_binding.QtCore import Qt
+from rqt_ez_publisher.ez_publisher_model import *
 
-def make_topic_strings(t, string=''):
-    try:
-        return [make_topic_strings(t.__getattribute__(slot), string + '/' + slot) for slot in t.__slots__]
-    except AttributeError, e:
-        return string
-
-def flatten(L):
-    if isinstance(L, list):
-       return reduce(lambda a,b: a + flatten(b), L, [])
-    else:
-        return [L]
-
-
-def find_topic_name(full_text, topic_dict):
-    if full_text[0] != '/':
-        full_text = '/' + full_text
-    # This is topic
-    if full_text in topic_dict:
-        return (full_text, None, None)
-    splited_text = full_text.split('/')[1:]
-    topic_name = ''
-    while not topic_name in topic_dict and splited_text:
-        topic_name += '/' + splited_text[0]
-        splited_text = splited_text[1:]
-    if splited_text:
-        m = re.search('(\w+)\[([0-9]+)\]', splited_text[-1])
-        if m:
-            splited_text[-1] = m.group(1)
-            return (topic_name, splited_text, int(m.group(2)))
-        else:
-            return (topic_name, splited_text, None)
-    else:
-        return (None, None, None)
-
-
-def get_value_type(topic_type_str, attributes):
-    if not attributes:
-        return (None, False)
-    try:
-        _, spec = roslib.msgs.load_by_type(topic_type_str)
-    except roslib.msgs.MsgSpecException, e:
-        return (None, False)
-    try:
-        index = spec.names.index(attributes[0])
-        field = spec.parsed_fields()[index]
-        attr_type = field.base_type
-        if field.is_builtin:
-            if attr_type in ['int8', 'int16', 'int32', 'int64']:
-                return (int, field.is_array)
-            if attr_type in ['uint8', 'uint16', 'uint32', 'uint64']:
-                return ('uint', field.is_array)
-            elif attr_type in ['float32', 'float64']:
-                return (float, field.is_array)
-            elif attr_type == 'string':
-                return (str, field.is_array)
-            elif attr_type == 'bool':
-                return (bool, field.is_array)
-        else:
-            return get_value_type(field.base_type, attributes[1:])
-    except ValueError, e:
-        return (None, False)
-    return (None, False)
-
-def make_text(topic_name, attributes, array_index):
-    text = topic_name + '/' + '/'.join(attributes)
-    if array_index != None:
-        text += '[%d]'%array_index
-    return text
 
 class ValueWidget(QtGui.QWidget):
+
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self._attributes = attributes
@@ -127,9 +61,11 @@ class ValueWidget(QtGui.QWidget):
 
 
 class BoolValueWidget(ValueWidget):
+
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         self._type = bool
-        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
+        ValueWidget.__init__(
+            self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def state_changed(self, state):
         self.publish_value(self._check_box.isChecked())
@@ -142,9 +78,11 @@ class BoolValueWidget(ValueWidget):
 
 
 class StringValueWidget(ValueWidget):
+
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         self._type = str
-        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
+        ValueWidget.__init__(
+            self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def input_text(self):
         self.publish_value(str(self._line_edit.text()))
@@ -157,9 +95,11 @@ class StringValueWidget(ValueWidget):
 
 
 class IntValueWidget(ValueWidget):
+
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         self._type = int
-        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
+        ValueWidget.__init__(
+            self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def slider_changed(self, value):
         self._lcd.display(value)
@@ -200,9 +140,11 @@ class IntValueWidget(ValueWidget):
 
 
 class UIntValueWidget(IntValueWidget):
+
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         self._type = int
-        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
+        ValueWidget.__init__(
+            self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def setup_ui(self, name):
         self._min_spin_box = QtGui.QSpinBox()
@@ -232,9 +174,11 @@ class UIntValueWidget(IntValueWidget):
 
 
 class DoubleValueWidget(ValueWidget):
+
     def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
         self._type = float
-        ValueWidget.__init__(self, topic_name, attributes, array_index, message, publisher, parent=parent)
+        ValueWidget.__init__(
+            self, topic_name, attributes, array_index, message, publisher, parent=parent)
 
     def set_value(self, value):
         self._lcd.display(value)
@@ -264,7 +208,8 @@ class DoubleValueWidget(ValueWidget):
         self._lcd = QtGui.QLCDNumber()
         self._slider.setValue(50)
         zero_button = QtGui.QPushButton('reset')
-        zero_button.clicked.connect(lambda x: self._slider.setValue(self.value_to_slider(0.0)))
+        zero_button.clicked.connect(
+            lambda x: self._slider.setValue(self.value_to_slider(0.0)))
         self._horizontal_layout.addWidget(self._min_spin_box)
         self._horizontal_layout.addWidget(self._slider)
         self._horizontal_layout.addWidget(self._max_spin_box)
@@ -282,6 +227,7 @@ class DoubleValueWidget(ValueWidget):
 
 
 class EasyPublisherWidget(QtGui.QWidget):
+
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self.setup_ui()
@@ -289,7 +235,7 @@ class EasyPublisherWidget(QtGui.QWidget):
         # model
         self._publishers = {}
         self._messages = {}
-        
+
     def add_slider(self):
         self.add_slider_by_text(str(self._line_edit.text()))
 
@@ -320,11 +266,13 @@ class EasyPublisherWidget(QtGui.QWidget):
         if output_type in type_class_dict:
             widget_class = type_class_dict[output_type]
         else:
-            rospy.logerr('not supported type %s'%output_type)
+            rospy.logerr('not supported type %s' % output_type)
             return False
-        widget = widget_class(topic_name, attributes, array_index, self._messages[topic_name], self._publishers[topic_name])
+        widget = widget_class(topic_name, attributes, array_index, self._messages[
+                              topic_name], self._publishers[topic_name])
         self._sliders.append(widget)
-        widget.close_button.clicked.connect(lambda x: self.close_slider(widget))
+        widget.close_button.clicked.connect(
+            lambda x: self.close_slider(widget))
         if widget.add_button:
             widget.add_button.clicked.connect(
                 lambda x: self.add_widget(output_type, topic_name, attributes, self.get_next_index(output_type, topic_name, attributes)))
@@ -333,18 +281,19 @@ class EasyPublisherWidget(QtGui.QWidget):
 
     def add_slider_by_text(self, text):
         if text in [x.get_text() for x in self._sliders]:
-            rospy.logwarn('%s is already exists'%text)
+            rospy.logwarn('%s is already exists' % text)
             return
         _, _, topic_types = rospy.get_master().getTopicTypes()
         topic_dict = dict(topic_types)
         topic_name, attributes, array_index = find_topic_name(text, topic_dict)
         if not topic_name:
-            rospy.logerr('%s not found'%text)
+            rospy.logerr('%s not found' % text)
             return
         topic_type_str = topic_dict[topic_name]
         message_class = roslib.message.get_message_class(topic_type_str)
         if not topic_name in self._publishers:
-            self._publishers[topic_name] = rospy.Publisher(topic_name, message_class)
+            self._publishers[topic_name] = rospy.Publisher(
+                topic_name, message_class)
         if not topic_name in self._messages:
             self._messages[topic_name] = message_class()
         builtin_type = None
@@ -362,7 +311,7 @@ class EasyPublisherWidget(QtGui.QWidget):
 
     def get_sliders(self):
         return self._sliders
-        
+
     def clear_sliders(self):
         for widget in self._sliders:
             self.close_slider(widget, False)
