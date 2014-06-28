@@ -1,6 +1,6 @@
 import os
 import rospy
-from rqt_ez_publisher.ez_publisher_widget import EasyPublisherWidget
+from .ez_publisher_widget import EasyPublisherWidget
 from rqt_py_common.plugin_container_widget import PluginContainerWidget
 from qt_gui.plugin import Plugin
 

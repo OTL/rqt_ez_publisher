@@ -3,7 +3,6 @@ import rospy
 import roslib.message
 import roslib.msgs
 
-
 def make_topic_strings(t, string=''):
     try:
         return [make_topic_strings(t.__getattribute__(slot), string + '/' + slot) for slot in t.__slots__]
@@ -109,7 +108,7 @@ class EasyPublisherModel(object):
 
     def get_topic_names(self):
         _, _, topic_types = rospy.get_master().getTopicTypes()
-        return [x[0] for x in topic_types]
+        return sorted([x[0] for x in topic_types])
 
     def resister_topic_by_text(self, text):
         _, _, topic_types = rospy.get_master().getTopicTypes()
@@ -117,7 +116,7 @@ class EasyPublisherModel(object):
         topic_name, attributes, array_index = find_topic_name(text, topic_dict)
         if not topic_name:
             rospy.logerr('%s not found' % text)
-            return
+            return None
         topic_type_str = topic_dict[topic_name]
         message_class = roslib.message.get_message_class(topic_type_str)
         self._add_publisher_if_not_exists(topic_name, message_class)

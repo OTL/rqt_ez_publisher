@@ -3,10 +3,9 @@ import sys
 
 from python_qt_binding import QtGui
 from python_qt_binding.QtCore import Qt, Signal
-from rqt_ez_publisher.ez_publisher_model import *
+from .ez_publisher_model import *
 
 LCD_HEIGHT = 35
-
 
 class ValueWidget(QtGui.QWidget):
 
@@ -286,8 +285,11 @@ class EasyPublisherWidget(QtGui.QWidget):
         if text in [x.get_text() for x in self._sliders]:
             self.sig_sysmsg.emit('%s is already exists' % text)
             return
-        topic_name, attributes, builtin_type, is_array, array_index = self._model.resister_topic_by_text(
-            text)
+        results = self._model.resister_topic_by_text(text)
+        if not results:
+            self.sig_sysmsg.emit('%s does not exists' % text)
+            return
+        topic_name, attributes, builtin_type, is_array, array_index = results
         if not attributes:
             for break_down_string in self._model.get_topic_break_down_strings(topic_name):
                 self.add_slider_by_text(break_down_string)
@@ -308,8 +310,9 @@ class EasyPublisherWidget(QtGui.QWidget):
 
     def setup_ui(self):
         horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel('topic/data')
+        topic_label = QtGui.QLabel('topic(+data member) name')
         clear_button = QtGui.QPushButton('all clear')
+        clear_button.setMaximumWidth(200)
         clear_button.clicked.connect(self.clear_sliders)
         self._combo = QtGui.QComboBox()
         self._combo.setEditable(True)
