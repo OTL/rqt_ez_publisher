@@ -77,7 +77,7 @@ def make_text(topic_name, attributes, array_index):
 
 
 class EasyPublisherModel(object):
-    
+
     def __init__(self):
         self._publishers = {}
         self._messages = {}

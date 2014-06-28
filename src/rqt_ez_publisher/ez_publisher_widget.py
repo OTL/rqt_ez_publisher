@@ -2,8 +2,10 @@ import rospy
 import sys
 
 from python_qt_binding import QtGui
-from python_qt_binding.QtCore import Qt
+from python_qt_binding.QtCore import Qt, Signal
 from rqt_ez_publisher.ez_publisher_model import *
+
+LCD_HEIGHT = 35
 
 
 class ValueWidget(QtGui.QWidget):
@@ -113,6 +115,7 @@ class IntValueWidget(ValueWidget):
         self._max_spin_box.setMaximum(10000)
         self._max_spin_box.setMinimum(-10000)
         self._lcd = QtGui.QLCDNumber()
+        self._lcd.setMaximumHeight(LCD_HEIGHT)
         self._min_spin_box.valueChanged.connect(self._slider.setMinimum)
         self._max_spin_box.valueChanged.connect(self._slider.setMaximum)
         self._min_spin_box.setValue(-10)
@@ -154,6 +157,7 @@ class UIntValueWidget(IntValueWidget):
         self._max_spin_box.setMaximum(10000)
         self._max_spin_box.setMinimum(0)
         self._lcd = QtGui.QLCDNumber()
+        self._lcd.setMaximumHeight(LCD_HEIGHT)
         self._min_spin_box.valueChanged.connect(self._slider.setMinimum)
         self._max_spin_box.valueChanged.connect(self._slider.setMaximum)
         self._min_spin_box.setValue(0)
@@ -203,6 +207,7 @@ class DoubleValueWidget(ValueWidget):
         self._max_spin_box.setMinimum(-10000)
         self._max_spin_box.setValue(1.0)
         self._lcd = QtGui.QLCDNumber()
+        self._lcd.setMaximumHeight(LCD_HEIGHT)
         self._slider.setValue(50)
         zero_button = QtGui.QPushButton('reset')
         zero_button.clicked.connect(
@@ -224,13 +229,13 @@ class DoubleValueWidget(ValueWidget):
 
 
 class EasyPublisherWidget(QtGui.QWidget):
+    sig_sysmsg = Signal(str)
 
     def __init__(self, parent=None):
         self._model = EasyPublisherModel()
         self._sliders = []
         QtGui.QWidget.__init__(self, parent=parent)
         self.setup_ui()
-
 
     def add_slider(self):
         self.add_slider_by_text(str(self._line_edit.text()))
@@ -262,12 +267,12 @@ class EasyPublisherWidget(QtGui.QWidget):
         if output_type in type_class_dict:
             widget_class = type_class_dict[output_type]
         else:
-            rospy.logerr('not supported type %s' % output_type)
+            self.sig_sysmsg.emit('not supported type %s' % output_type)
             return False
         widget = widget_class(topic_name, attributes, array_index,
                               self._model.get_message(topic_name),
                               self._model.get_publisher(topic_name))
-                              
+
         self._sliders.append(widget)
         widget.close_button.clicked.connect(
             lambda x: self.close_slider(widget))
@@ -279,9 +284,10 @@ class EasyPublisherWidget(QtGui.QWidget):
 
     def add_slider_by_text(self, text):
         if text in [x.get_text() for x in self._sliders]:
-            rospy.logwarn('%s is already exists' % text)
+            self.sig_sysmsg.emit('%s is already exists' % text)
             return
-        topic_name, attributes, builtin_type, is_array, array_index = self._model.resister_topic_by_text(text)
+        topic_name, attributes, builtin_type, is_array, array_index = self._model.resister_topic_by_text(
+            text)
         if not attributes:
             for break_down_string in self._model.get_topic_break_down_strings(topic_name):
                 self.add_slider_by_text(break_down_string)

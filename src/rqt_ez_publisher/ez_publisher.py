@@ -1,6 +1,7 @@
 import os
 import rospy
 from rqt_ez_publisher.ez_publisher_widget import EasyPublisherWidget
+from rqt_py_common.plugin_container_widget import PluginContainerWidget
 from qt_gui.plugin import Plugin
 
 
@@ -18,6 +19,7 @@ class EzPublisherPlugin(Plugin):
         # Create QWidget
         self._widget = EasyPublisherWidget()
         self._widget.setObjectName('EzPublisherPluginUi')
+        self.mainwidget = PluginContainerWidget(self._widget, True, False)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
