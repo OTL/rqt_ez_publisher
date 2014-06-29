@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2014-06-29)
+------------------
 * MoveUP/Down and use icon
 * Fix cmake (remove python packages from find_package)
 * Support repeat publish
