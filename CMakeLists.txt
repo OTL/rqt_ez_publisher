@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rqt_ez_publisher)
 
-find_package(catkin REQUIRED COMPONENTS
-  rospy
-  rqt_gui
-  rqt_gui_py
-)
+find_package(catkin REQUIRED)
 
 catkin_python_setup()
 
