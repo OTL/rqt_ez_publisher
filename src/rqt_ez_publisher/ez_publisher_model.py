@@ -2,11 +2,12 @@ import re
 import rospy
 import roslib.message
 import roslib.msgs
+from functools import reduce
 
 def make_topic_strings(t, string=''):
     try:
         return [make_topic_strings(t.__getattribute__(slot), string + '/' + slot) for slot in t.__slots__]
-    except AttributeError, e:
+    except AttributeError as e:
         return string
 
 
@@ -44,7 +45,7 @@ def get_value_type(topic_type_str, attributes):
         return (None, False)
     try:
         _, spec = roslib.msgs.load_by_type(topic_type_str)
-    except roslib.msgs.MsgSpecException, e:
+    except roslib.msgs.MsgSpecException as e:
         return (None, False)
     try:
         index = spec.names.index(attributes[0])
@@ -63,7 +64,7 @@ def get_value_type(topic_type_str, attributes):
                 return (bool, field.is_array)
         else:
             return get_value_type(field.base_type, attributes[1:])
-    except ValueError, e:
+    except ValueError as e:
         return (None, False)
     return (None, False)
 
@@ -125,5 +126,5 @@ class EasyPublisherModel(object):
         return (topic_name, attributes, builtin_type, is_array, array_index)
 
     def shutdown(self):
-        for pub in self._publishers.values():
+        for pub in list(self._publishers.values()):
             pub.unregister()
