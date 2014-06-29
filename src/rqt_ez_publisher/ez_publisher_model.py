@@ -41,11 +41,14 @@ def find_topic_name(full_text, topic_dict):
 
 
 def get_value_type(topic_type_str, attributes):
+    # for Header -> std_msgs/Header
+    topic_type_str = roslib.msgs.resolve_type(topic_type_str, '')
     if not attributes:
         return (None, False)
     try:
         _, spec = roslib.msgs.load_by_type(topic_type_str)
     except roslib.msgs.MsgSpecException as e:
+        print e
         return (None, False)
     try:
         index = spec.names.index(attributes[0])

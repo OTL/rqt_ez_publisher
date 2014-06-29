@@ -21,6 +21,13 @@ class FunctionTest(unittest.TestCase):
         self.assertTrue('/cmd_vel/angular/y' in strings[1])
         self.assertTrue('/cmd_vel/angular/z' in strings[1])
 
+    def test_make_topic_strings_with_header(self):
+        strings = ez_model.make_topic_strings(geo_msgs.PointStamped(),
+                                              '/cmd_vel')
+        self.assertEqual(len(strings), 2)
+        self.assertEqual(len(strings[0]), 3)
+        self.assertTrue('/cmd_vel/header/frame_id' in strings[0])
+
     def test_flatten(self):
         flattened = ez_model.flatten([0, [[1, 2], 3, 4], [5, 6], [7], 8])
         self.assertEqual(len(flattened), 9)
@@ -57,6 +64,12 @@ class FunctionTest(unittest.TestCase):
         type, is_array = ez_model.get_value_type(
             'geometry_msgs/Twist', ['linear', 'x'])
         self.assertEqual(type, float)
+        self.assertEqual(is_array, False)
+
+    def test_get_value_type_header(self):
+        type, is_array = ez_model.get_value_type(
+            'geometry_msgs/PointStamped', ['header', 'frame_id'])
+        self.assertEqual(type, str)
         self.assertEqual(is_array, False)
 
     def test_get_value_type_not_found(self):
