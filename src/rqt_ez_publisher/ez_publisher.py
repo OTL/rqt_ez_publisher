@@ -35,6 +35,8 @@ class EzPublisherPlugin(Plugin):
         for slider in self._widget.get_sliders():
             instance_settings.set_value(
                 slider.get_text() + '_range', slider.get_range())
+            instance_settings.set_value(
+                slider.get_text() + '_is_repeat', slider.is_repeat())
 
     def restore_settings(self, plugin_settings, instance_settings):
         texts = instance_settings.value('texts')
@@ -44,8 +46,11 @@ class EzPublisherPlugin(Plugin):
         for slider in self._widget.get_sliders():
             r = instance_settings.value(slider.get_text() + '_range')
             slider.set_range(r)
+            is_repeat = instance_settings.value(slider.get_text() + '_is_repeat')
+            slider.set_is_repeat(is_repeat == 'true')
 
-    # def trigger_configuration(self):
+#    def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure
         # This will enable a setting button (gear icon) in each dock widget title bar
         # Usually used to open a modal configuration dialog
+

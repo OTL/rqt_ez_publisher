@@ -24,6 +24,7 @@ class TopicPublisherWithTimer(TopicPublisher):
     def stop_timer(self):
         if self._timer:
             self._timer.stop()
+            self._timer = None
 
     def is_repeating(self):
         if self._timer and self._timer.isActive():
@@ -54,16 +55,25 @@ class ValueWidget(QtGui.QWidget):
         self._text = make_text(topic_name, attributes, array_index)
         self._horizontal_layout = QtGui.QHBoxLayout()
         topic_label = QtGui.QLabel(self._text)
-        self.close_button = QtGui.QPushButton('x')
+        self.close_button = QtGui.QPushButton()
         self.close_button.setMaximumWidth(30)
+        self.close_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+        self.up_button = QtGui.QPushButton()
+        self.up_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_ArrowUp))
+        self.up_button.setMaximumWidth(30)
+        self.down_button = QtGui.QPushButton()
+        self.down_button.setMaximumWidth(30)
+        self.down_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_ArrowDown))
         repeat_label = QtGui.QLabel('repeat')
         self._repeat_box = QtGui.QCheckBox()
         self._repeat_box.stateChanged.connect(self.repeat_changed)
         self._repeat_box.setChecked(publisher.is_repeating())
+        self._horizontal_layout.addWidget(topic_label)
         self._horizontal_layout.addWidget(self.close_button)
+        self._horizontal_layout.addWidget(self.up_button)
+        self._horizontal_layout.addWidget(self.down_button)
         self._horizontal_layout.addWidget(repeat_label)
         self._horizontal_layout.addWidget(self._repeat_box)
-        self._horizontal_layout.addWidget(topic_label)
         if self._array_index != None:
             self.add_button = QtGui.QPushButton('+')
             self.add_button.setMaximumWidth(30)
@@ -75,12 +85,18 @@ class ValueWidget(QtGui.QWidget):
     def get_topic_name(self):
         return self._topic_name
 
-    def repeat_changed(self, state):
-        if self._repeat_box.isChecked():
+    def is_repeat(self):
+        return self._publisher.is_repeating()
+
+    def set_is_repeat(self, repeat_on):
+        if repeat_on:
             self._publisher.set_timer(PUBLISH_INTERVAL)
         else:
             self._publisher.stop_timer()
         self._publisher.request_update()
+
+    def repeat_changed(self, state):
+        self.set_is_repeat(state == 2)
 
     def update(self):
         self._repeat_box.setChecked(self._publisher.is_repeating())
@@ -324,16 +340,34 @@ class EasyPublisherWidget(QtGui.QWidget):
             self.sig_sysmsg.emit('not supported type %s' % output_type)
             return False
         widget = widget_class(topic_name, attributes, array_index,
-                              self._model.get_publisher(topic_name))
+                              self._model.get_publisher(topic_name),
+                              parent=self)
         self._model.get_publisher(topic_name).set_manager(self)
         self._sliders.append(widget)
         widget.close_button.clicked.connect(
             lambda x: self.close_slider(widget))
+        widget.up_button.clicked.connect(
+            lambda x: self.move_up_widget(widget))
+        widget.down_button.clicked.connect(
+            lambda x: self.move_down_widget(widget))
         if widget.add_button:
             widget.add_button.clicked.connect(
                 lambda x: self.add_widget(output_type, topic_name, attributes, self.get_next_index(output_type, topic_name, attributes)))
         self._main_vertical_layout.addWidget(widget)
         return True
+
+    def move_down_widget(self, widget):
+        index = self._main_vertical_layout.indexOf(widget)
+        if index < self._main_vertical_layout.count() - 1:
+            self._main_vertical_layout.removeWidget(widget)
+            self._main_vertical_layout.insertWidget(index + 1, widget)
+
+    def move_up_widget(self, widget):
+        index = self._main_vertical_layout.indexOf(widget)
+        if index > 1:
+            self._main_vertical_layout.removeWidget(widget)
+            self._main_vertical_layout.insertWidget(index - 1, widget)
+        
 
     def add_slider_by_text(self, text):
         if text in [x.get_text() for x in self._sliders]:
