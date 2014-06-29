@@ -1,6 +1,8 @@
 import os
 import rospy
 from .ez_publisher_widget import EasyPublisherWidget
+from .ez_publisher_widget import TopicPublisherWithTimer
+from .config_dialog import ConfigDialog
 from rqt_py_common.plugin_container_widget import PluginContainerWidget
 from qt_gui.plugin import Plugin
 
@@ -32,6 +34,8 @@ class EzPublisherPlugin(Plugin):
     def save_settings(self, plugin_settings, instance_settings):
         instance_settings.set_value(
             'texts', [x.get_text() for x in self._widget.get_sliders()])
+        instance_settings.set_value(
+            'publish_interval', TopicPublisherWithTimer.publish_interval)
         for slider in self._widget.get_sliders():
             instance_settings.set_value(
                 slider.get_text() + '_range', slider.get_range())
@@ -48,9 +52,9 @@ class EzPublisherPlugin(Plugin):
             slider.set_range(r)
             is_repeat = instance_settings.value(slider.get_text() + '_is_repeat')
             slider.set_is_repeat(is_repeat == 'true')
+        interval = instance_settings.value('publish_interval')
+        TopicPublisherWithTimer.publish_interval = int(interval)
 
-#    def trigger_configuration(self):
-        # Comment in to signal that the plugin has a way to configure
-        # This will enable a setting button (gear icon) in each dock widget title bar
-        # Usually used to open a modal configuration dialog
-
+    def trigger_configuration(self):
+        dialog = ConfigDialog()
+        dialog.exec_()

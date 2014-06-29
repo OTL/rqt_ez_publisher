@@ -6,15 +6,22 @@ from python_qt_binding.QtCore import Qt, Signal, QTimer
 from .ez_publisher_model import *
 
 LCD_HEIGHT = 35
-PUBLISH_INTERVAL = 100 #[ms]
 
 class TopicPublisherWithTimer(TopicPublisher):
+
+    publish_interval = 100
+
     def __init__(self, topic_name, message_class):
         TopicPublisher.__init__(self, topic_name, message_class)
         self._timer = None
         self._manager = None
 
-    def set_timer(self, interval, parent=None):
+    def update_timer_interval(self, interval):
+        if self._timer:
+            self._timer.setInterval(interval)
+
+    def set_timer(self, parent=None):
+        interval = self.publish_interval
         if not self._timer:
             self._timer = QTimer(parent=parent)
             self._timer.timeout.connect(self.publish)
@@ -90,7 +97,7 @@ class ValueWidget(QtGui.QWidget):
 
     def set_is_repeat(self, repeat_on):
         if repeat_on:
-            self._publisher.set_timer(PUBLISH_INTERVAL)
+            self._publisher.set_timer()
         else:
             self._publisher.stop_timer()
         self._publisher.request_update()
@@ -399,17 +406,26 @@ class EasyPublisherWidget(QtGui.QWidget):
             self.close_slider(widget, False)
         self._sliders = []
 
+    def update_combo_items(self):
+        self._combo.clear()
+        for topic in self._model.get_topic_names():
+            self._combo.addItem(topic)
+
     def setup_ui(self):
         horizontal_layout = QtGui.QHBoxLayout()
+        reload_button = QtGui.QPushButton(parent=self)
+        reload_button.setMaximumWidth(30)
+        reload_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_BrowserReload))
+        reload_button.clicked.connect(self.update_combo_items)
         topic_label = QtGui.QLabel('topic(+data member) name')
         clear_button = QtGui.QPushButton('all clear')
         clear_button.setMaximumWidth(200)
         clear_button.clicked.connect(self.clear_sliders)
         self._combo = QtGui.QComboBox()
         self._combo.setEditable(True)
-        for topic in self._model.get_topic_names():
-            self._combo.addItem(topic)
+        self.update_combo_items()
         self._combo.activated.connect(self.add_slider_from_combo)
+        horizontal_layout.addWidget(reload_button)
         horizontal_layout.addWidget(topic_label)
         horizontal_layout.addWidget(self._combo)
         horizontal_layout.addWidget(clear_button)
