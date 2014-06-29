@@ -97,7 +97,7 @@ class EasyPublisherModel(object):
     def _add_publisher_if_not_exists(self, topic_name, message_class):
         if not topic_name in self._publishers:
             self._publishers[topic_name] = rospy.Publisher(
-                topic_name, message_class)
+                topic_name, message_class, queue_size=100)
 
     def _add_message_if_not_exists(self, topic_name, message_class):
         if not topic_name in self._messages:
