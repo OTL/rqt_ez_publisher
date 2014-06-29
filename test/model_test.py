@@ -101,9 +101,6 @@ class ModelTest(unittest.TestCase):
     def test_get_publisher_not_exists(self):
         self.assertEqual(self.model.get_publisher('not_exists'), None)
 
-    def test_get_message_not_exists(self):
-        self.assertEqual(self.model.get_message('not_exists'), None)
-
 
 if __name__ == '__main__':
     import rosunit

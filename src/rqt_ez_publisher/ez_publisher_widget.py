@@ -2,25 +2,67 @@ import rospy
 import sys
 
 from python_qt_binding import QtGui
-from python_qt_binding.QtCore import Qt, Signal
+from python_qt_binding.QtCore import Qt, Signal, QTimer
 from .ez_publisher_model import *
 
 LCD_HEIGHT = 35
+PUBLISH_INTERVAL = 100 #[ms]
+
+class TopicPublisherWithTimer(TopicPublisher):
+    def __init__(self, topic_name, message_class):
+        TopicPublisher.__init__(self, topic_name, message_class)
+        self._timer = None
+        self._manager = None
+
+    def set_timer(self, interval, parent=None):
+        if not self._timer:
+            self._timer = QTimer(parent=parent)
+            self._timer.timeout.connect(self.publish)
+        self._timer.setInterval(interval)
+        self._timer.start()
+
+    def stop_timer(self):
+        if self._timer:
+            self._timer.stop()
+
+    def is_repeating(self):
+        if self._timer and self._timer.isActive():
+            return True
+        else:
+            return False
+
+    def set_manager(self, manager):
+        self._manager = manager
+
+    def get_manager(self):
+        return self._manager
+
+    def request_update(self):
+        for slider in self._manager.get_sliders_for_topic(
+            self.get_topic_name()):
+            slider.update()
+
 
 class ValueWidget(QtGui.QWidget):
 
-    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self._attributes = attributes
         self._publisher = publisher
-        self._message = message
         self._array_index = array_index
+        self._topic_name = topic_name
         self._text = make_text(topic_name, attributes, array_index)
         self._horizontal_layout = QtGui.QHBoxLayout()
         topic_label = QtGui.QLabel(self._text)
         self.close_button = QtGui.QPushButton('x')
         self.close_button.setMaximumWidth(30)
+        repeat_label = QtGui.QLabel('repeat')
+        self._repeat_box = QtGui.QCheckBox()
+        self._repeat_box.stateChanged.connect(self.repeat_changed)
+        self._repeat_box.setChecked(publisher.is_repeating())
         self._horizontal_layout.addWidget(self.close_button)
+        self._horizontal_layout.addWidget(repeat_label)
+        self._horizontal_layout.addWidget(self._repeat_box)
         self._horizontal_layout.addWidget(topic_label)
         if self._array_index != None:
             self.add_button = QtGui.QPushButton('+')
@@ -30,11 +72,24 @@ class ValueWidget(QtGui.QWidget):
             self.add_button = None
         self.setup_ui(self._text)
 
+    def get_topic_name(self):
+        return self._topic_name
+
+    def repeat_changed(self, state):
+        if self._repeat_box.isChecked():
+            self._publisher.set_timer(PUBLISH_INTERVAL)
+        else:
+            self._publisher.stop_timer()
+        self._publisher.request_update()
+
+    def update(self):
+        self._repeat_box.setChecked(self._publisher.is_repeating())
+
     def get_text(self):
         return self._text
 
     def publish_value(self, value):
-        message_target = self._message
+        message_target = self._publisher.get_message()
         if len(self._attributes) >= 2:
             for attr in self._attributes[:-1]:
                 message_target = message_target.__getattribute__(attr)
@@ -46,7 +101,7 @@ class ValueWidget(QtGui.QWidget):
             message_target.__setattr__(self._attributes[-1], array)
         else:
             message_target.__setattr__(self._attributes[-1], value)
-        self._publisher.publish(self._message)
+        self._publisher.publish()
 
     def setup_ui(self, name):
         pass
@@ -60,10 +115,10 @@ class ValueWidget(QtGui.QWidget):
 
 class BoolValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         self._type = bool
         ValueWidget.__init__(
-            self, topic_name, attributes, array_index, message, publisher, parent=parent)
+            self, topic_name, attributes, array_index, publisher, parent=parent)
 
     def state_changed(self, state):
         self.publish_value(self._check_box.isChecked())
@@ -77,10 +132,10 @@ class BoolValueWidget(ValueWidget):
 
 class StringValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         self._type = str
         ValueWidget.__init__(
-            self, topic_name, attributes, array_index, message, publisher, parent=parent)
+            self, topic_name, attributes, array_index, publisher, parent=parent)
 
     def input_text(self):
         self.publish_value(str(self._line_edit.text()))
@@ -94,10 +149,10 @@ class StringValueWidget(ValueWidget):
 
 class IntValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         self._type = int
         ValueWidget.__init__(
-            self, topic_name, attributes, array_index, message, publisher, parent=parent)
+            self, topic_name, attributes, array_index, publisher, parent=parent)
 
     def slider_changed(self, value):
         self._lcd.display(value)
@@ -140,10 +195,10 @@ class IntValueWidget(ValueWidget):
 
 class UIntValueWidget(IntValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         self._type = int
         ValueWidget.__init__(
-            self, topic_name, attributes, array_index, message, publisher, parent=parent)
+            self, topic_name, attributes, array_index, publisher, parent=parent)
 
     def setup_ui(self, name):
         self._min_spin_box = QtGui.QSpinBox()
@@ -175,10 +230,10 @@ class UIntValueWidget(IntValueWidget):
 
 class DoubleValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, message, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         self._type = float
         ValueWidget.__init__(
-            self, topic_name, attributes, array_index, message, publisher, parent=parent)
+            self, topic_name, attributes, array_index, publisher, parent=parent)
 
     def set_value(self, value):
         self._lcd.display(value)
@@ -231,7 +286,7 @@ class EasyPublisherWidget(QtGui.QWidget):
     sig_sysmsg = Signal(str)
 
     def __init__(self, parent=None):
-        self._model = EasyPublisherModel()
+        self._model = EasyPublisherModel(TopicPublisherWithTimer)
         self._sliders = []
         QtGui.QWidget.__init__(self, parent=parent)
         self.setup_ui()
@@ -269,9 +324,8 @@ class EasyPublisherWidget(QtGui.QWidget):
             self.sig_sysmsg.emit('not supported type %s' % output_type)
             return False
         widget = widget_class(topic_name, attributes, array_index,
-                              self._model.get_message(topic_name),
                               self._model.get_publisher(topic_name))
-
+        self._model.get_publisher(topic_name).set_manager(self)
         self._sliders.append(widget)
         widget.close_button.clicked.connect(
             lambda x: self.close_slider(widget))
@@ -299,6 +353,9 @@ class EasyPublisherWidget(QtGui.QWidget):
                 # use index 0
                 array_index = 0
             self.add_widget(builtin_type, topic_name, attributes, array_index)
+
+    def get_sliders_for_topic(self, topic):
+        return [x for x in self._sliders if x.get_topic_name() == topic]
 
     def get_sliders(self):
         return self._sliders

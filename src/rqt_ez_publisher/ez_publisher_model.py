@@ -4,6 +4,7 @@ import roslib.message
 import roslib.msgs
 from functools import reduce
 
+
 def make_topic_strings(t, string=''):
     try:
         return [make_topic_strings(t.__getattribute__(slot), string + '/' + slot) for slot in t.__slots__]
@@ -79,11 +80,33 @@ def make_text(topic_name, attributes, array_index):
     return text
 
 
+class TopicPublisher(object):
+
+    def __init__(self, topic_name, message_class):
+        self._name = topic_name
+        self._publisher = rospy.Publisher(
+            topic_name, message_class, queue_size=100)
+        self._message = message_class()
+
+    def get_topic_name(self):
+        return self._name
+
+    def publish(self):
+        self._publisher.publish(self._message)
+
+    def get_message(self):
+        return self._message
+
+
 class EasyPublisherModel(object):
 
-    def __init__(self):
+    def __init__(self, publisher_class=TopicPublisher):
         self._publishers = {}
-        self._messages = {}
+        self._publisher_class = publisher_class
+
+    def publish_topic(self, topic_name):
+        if topic_name in self._publishers:
+            self._publishers[topic_name].publish()
 
     def get_publisher(self, topic_name):
         if topic_name in self._publishers:
@@ -91,24 +114,14 @@ class EasyPublisherModel(object):
         else:
             return None
 
-    def get_message(self, topic_name):
-        if topic_name in self._messages:
-            return self._messages[topic_name]
-        else:
-            return None
-
     def _add_publisher_if_not_exists(self, topic_name, message_class):
         if not topic_name in self._publishers:
-            self._publishers[topic_name] = rospy.Publisher(
-                topic_name, message_class, queue_size=100)
-
-    def _add_message_if_not_exists(self, topic_name, message_class):
-        if not topic_name in self._messages:
-            self._messages[topic_name] = message_class()
+            self._publishers[topic_name] = self._publisher_class(
+                topic_name, message_class)
 
     def get_topic_break_down_strings(self, topic_name):
-        return flatten(make_topic_strings(self._messages[topic_name],
-                                          topic_name))
+        return flatten(make_topic_strings(
+                self._publishers[topic_name].get_message(), topic_name))
 
     def get_topic_names(self):
         _, _, topic_types = rospy.get_master().getTopicTypes()
@@ -124,7 +137,6 @@ class EasyPublisherModel(object):
         topic_type_str = topic_dict[topic_name]
         message_class = roslib.message.get_message_class(topic_type_str)
         self._add_publisher_if_not_exists(topic_name, message_class)
-        self._add_message_if_not_exists(topic_name, message_class)
         builtin_type, is_array = get_value_type(topic_type_str, attributes)
         return (topic_name, attributes, builtin_type, is_array, array_index)
 
