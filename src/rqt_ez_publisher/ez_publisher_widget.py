@@ -114,8 +114,23 @@ class ValueWidget(QtGui.QWidget):
     def publish_value(self, value):
         message_target = self._publisher.get_message()
         if len(self._attributes) >= 2:
+            full_string = self._topic_name
             for attr in self._attributes[:-1]:
-                message_target = message_target.__getattribute__(attr)
+                full_string += '/' + attr
+                m = re.search('(\w+)\[([0-9]+)\]', attr)
+                if m:
+                    array_type = get_field_type(full_string)[0]
+                    index = int(m.group(2))
+                    while len(message_target.__getattribute__(m.group(1))) <= index:
+                        message_target.__getattribute__(m.group(1)).append(array_type())
+                    message_target = message_target.__getattribute__(m.group(1))[index]
+                elif get_field_type(full_string)[1]: # this is impossible
+                    array_type = get_field_type(full_string)[0]
+                    if len(message_target.__getattribute__(attr)) == 0:
+                        message_target.__getattribute__(attr).append(array_type())
+                    message_target = message_target.__getattribute__(attr)[0]
+                else:
+                    message_target = message_target.__getattribute__(attr)
         if self._array_index != None:
             array = message_target.__getattribute__(self._attributes[-1])
             while len(array) <= self._array_index:
@@ -394,6 +409,14 @@ class EasyPublisherWidget(QtGui.QWidget):
                 # use index 0
                 array_index = 0
             self.add_widget(builtin_type, topic_name, attributes, array_index)
+        else:
+            # array of non buildin_type
+            if (is_array and array_index == None) or get_field_type(text)[1]:
+                text += '[0]'
+            for string in make_topic_strings(get_field_type(text)[0](), text):
+                self.add_slider_by_text(string)
+#            self.sig_sysmsg.emit('%s please specify final data' % text)
+
 
     def get_sliders_for_topic(self, topic):
         return [x for x in self._sliders if x.get_topic_name() == topic]

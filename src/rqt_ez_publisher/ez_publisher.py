@@ -53,7 +53,8 @@ class EzPublisherPlugin(Plugin):
             is_repeat = instance_settings.value(slider.get_text() + '_is_repeat')
             slider.set_is_repeat(is_repeat == 'true')
         interval = instance_settings.value('publish_interval')
-        TopicPublisherWithTimer.publish_interval = int(interval)
+        if interval:
+            TopicPublisherWithTimer.publish_interval = int(interval)
 
     def trigger_configuration(self):
         dialog = ConfigDialog()

@@ -4,8 +4,13 @@ import roslib.message
 import roslib.msgs
 from functools import reduce
 
+from rqt_py_common.topic_helpers import get_field_type
 
+# initial string must be topic name for get_field_type
 def make_topic_strings(t, string=''):
+    if isinstance(t, list):
+        array_instance = get_field_type(string)[0]()
+        return make_topic_strings(array_instance, string + '[0]')
     try:
         return [make_topic_strings(t.__getattribute__(slot), string + '/' + slot) for slot in t.__slots__]
     except AttributeError as e:
@@ -52,7 +57,8 @@ def get_value_type(topic_type_str, attributes):
         print e
         return (None, False)
     try:
-        index = spec.names.index(attributes[0])
+        head_attribute = attributes[0].split('[')[0]
+        index = spec.names.index(head_attribute)
         field = spec.parsed_fields()[index]
         attr_type = field.base_type
         if field.is_builtin:
