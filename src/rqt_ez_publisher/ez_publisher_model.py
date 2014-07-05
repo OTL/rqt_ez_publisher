@@ -159,20 +159,30 @@ class EasyPublisherModel(object):
                 topic_name, message_class)
 
     def get_topic_break_down_strings(self, topic_name):
-        return flatten(make_topic_strings(
+        if topic_name in self._publishers:
+            return flatten(make_topic_strings(
                 self._publishers[topic_name].get_message(), topic_name))
+        else:
+            return []
 
     def get_topic_names(self):
         _, _, topic_types = rospy.get_master().getTopicTypes()
         return sorted([x[0] for x in topic_types])
 
-    def expand_attribute(self, input_text, is_array=False, array_index=None):
+    def expand_attribute(self, input_text, array_index=None):
         text = copy.copy(input_text)
         try:
-            # array of non buildin_type
-            if (is_array and array_index == None) or get_field_type(text)[1]:
-                text += '[0]'
-            return make_topic_strings(get_field_type(text)[0](), text)
+            if get_field_type(text)[1]:
+                if array_index == None:
+                    index = 0
+                else:
+                    index = array_index
+                text += '[%s]'%index
+            type = get_field_type(text)[0]
+            if type:
+                return flatten(make_topic_strings(type(), text))
+            else:
+                return []
         except AttributeError as e:
             return []
 

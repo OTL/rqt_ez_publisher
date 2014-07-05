@@ -392,7 +392,7 @@ class EasyPublisherWidget(QtGui.QWidget):
                 array_index = 0
             self.add_widget(builtin_type, topic_name, attributes, array_index)
         else:
-            for string in self._model.expand_attribute(text, is_array, array_index):
+            for string in self._model.expand_attribute(text, array_index):
                 self.add_slider_by_text(string)
 
     def get_sliders_for_topic(self, topic):

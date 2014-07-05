@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rqt_ez_publisher)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS rostest)
 
 catkin_python_setup()
 
 catkin_package()
 
 if(CATKIN_ENABLE_TESTING)
-  catkin_add_nosetests(test/model_test.py)
+  catkin_add_nosetests(test/function_test.py)
+  add_rostest(test/ros.test)
 endif()
 
 install(FILES

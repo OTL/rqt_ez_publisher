@@ -106,15 +106,8 @@ class FunctionTest(unittest.TestCase):
         self.assertEqual(text, '/cmd_vel/linear/x[2]')
 
 
-class ModelTest(unittest.TestCase):
-
-    def setUp(self):
-        self.model = ez_model.EasyPublisherModel()
-
-    def test_get_publisher_not_exists(self):
-        self.assertEqual(self.model.get_publisher('not_exists'), None)
-
 
 if __name__ == '__main__':
     import rosunit
-    rosunit.unitrun(PKG, 'dotcode_test', DotcodeTest)
+    rosunit.unitrun(PKG, 'function_test', FunctionTest)
+

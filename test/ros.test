@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="rqt_ez_publisher" type="joint.py" name="joint"/>
+  <node pkg="rqt_ez_publisher" type="polygon.py" name="polygon"/>
+  <test pkg="rqt_ez_publisher" type="model_ros_test.py" test-name="ros_model"/>
+</launch>
