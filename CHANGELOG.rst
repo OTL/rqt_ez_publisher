@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2014-07-05)
+------------------
 * Add tests that uses ros
 * Support array of non builtin type
 * add build status in README.md
