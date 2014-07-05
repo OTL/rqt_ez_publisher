@@ -6,10 +6,12 @@ from python_qt_binding.QtCore import Qt, Signal, QTimer
 from .ez_publisher_model import *
 
 LCD_HEIGHT = 35
+DEFAULT_PUBLISH_INTERVAL = 100
+
 
 class TopicPublisherWithTimer(TopicPublisher):
 
-    publish_interval = 100
+    publish_interval = DEFAULT_PUBLISH_INTERVAL
 
     def __init__(self, topic_name, message_class):
         TopicPublisher.__init__(self, topic_name, message_class)
@@ -112,33 +114,8 @@ class ValueWidget(QtGui.QWidget):
         return self._text
 
     def publish_value(self, value):
-        message_target = self._publisher.get_message()
-        if len(self._attributes) >= 2:
-            full_string = self._topic_name
-            for attr in self._attributes[:-1]:
-                full_string += '/' + attr
-                m = re.search('(\w+)\[([0-9]+)\]', attr)
-                if m:
-                    array_type = get_field_type(full_string)[0]
-                    index = int(m.group(2))
-                    while len(message_target.__getattribute__(m.group(1))) <= index:
-                        message_target.__getattribute__(m.group(1)).append(array_type())
-                    message_target = message_target.__getattribute__(m.group(1))[index]
-                elif get_field_type(full_string)[1]: # this is impossible
-                    array_type = get_field_type(full_string)[0]
-                    if len(message_target.__getattribute__(attr)) == 0:
-                        message_target.__getattribute__(attr).append(array_type())
-                    message_target = message_target.__getattribute__(attr)[0]
-                else:
-                    message_target = message_target.__getattribute__(attr)
-        if self._array_index != None:
-            array = message_target.__getattribute__(self._attributes[-1])
-            while len(array) <= self._array_index:
-                array.append(self._type())
-            array[self._array_index] = value
-            message_target.__setattr__(self._attributes[-1], array)
-        else:
-            message_target.__setattr__(self._attributes[-1], value)
+        set_msg_attribute_value(self._publisher.get_message(), self._topic_name,
+                                self._type, self._attributes, self._array_index, value)
         self._publisher.publish()
 
     def setup_ui(self, name):
@@ -349,7 +326,7 @@ class EasyPublisherWidget(QtGui.QWidget):
             text = make_text(topic_name, attributes, array_index)
         return array_index
 
-    def add_widget(self, output_type, topic_name, attributes, array_index):
+    def add_widget(self, output_type, topic_name, attributes, array_index, position=None):
         widget_class = None
         type_class_dict = {float: DoubleValueWidget,
                            int: IntValueWidget,
@@ -374,8 +351,13 @@ class EasyPublisherWidget(QtGui.QWidget):
             lambda x: self.move_down_widget(widget))
         if widget.add_button:
             widget.add_button.clicked.connect(
-                lambda x: self.add_widget(output_type, topic_name, attributes, self.get_next_index(output_type, topic_name, attributes)))
-        self._main_vertical_layout.addWidget(widget)
+                lambda x: self.add_widget(output_type, topic_name, attributes,
+                                          self.get_next_index(output_type, topic_name, attributes),
+                                          self._main_vertical_layout.indexOf(widget) + 1))
+        if position:
+            self._main_vertical_layout.insertWidget(position, widget)
+        else:
+            self._main_vertical_layout.addWidget(widget)
         return True
 
     def move_down_widget(self, widget):
@@ -410,13 +392,8 @@ class EasyPublisherWidget(QtGui.QWidget):
                 array_index = 0
             self.add_widget(builtin_type, topic_name, attributes, array_index)
         else:
-            # array of non buildin_type
-            if (is_array and array_index == None) or get_field_type(text)[1]:
-                text += '[0]'
-            for string in make_topic_strings(get_field_type(text)[0](), text):
+            for string in self._model.expand_attribute(text, is_array, array_index):
                 self.add_slider_by_text(string)
-#            self.sig_sysmsg.emit('%s please specify final data' % text)
-
 
     def get_sliders_for_topic(self, topic):
         return [x for x in self._sliders if x.get_topic_name() == topic]
