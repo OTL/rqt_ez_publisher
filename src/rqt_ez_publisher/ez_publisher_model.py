@@ -97,7 +97,7 @@ def get_value_type(topic_type_str, attributes):
         if field.is_builtin:
             if attr_type in ['int8', 'int16', 'int32', 'int64']:
                 return (int, field.is_array)
-            if attr_type in ['uint8', 'uint16', 'uint32', 'uint64']:
+            if attr_type in ['byte', 'uint8', 'uint16', 'uint32', 'uint64']:
                 return ('uint', field.is_array)
             elif attr_type in ['float32', 'float64']:
                 return (float, field.is_array)
@@ -105,6 +105,9 @@ def get_value_type(topic_type_str, attributes):
                 return (str, field.is_array)
             elif attr_type == 'bool':
                 return (bool, field.is_array)
+            else:
+                print 'not support %s' % attr_type
+                return (None, False)
         else:
             return get_value_type(field.base_type, attributes[1:])
     except ValueError as e:
