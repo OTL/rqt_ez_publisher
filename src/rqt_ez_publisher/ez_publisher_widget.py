@@ -173,23 +173,25 @@ class IntValueWidget(ValueWidget):
         self._lcd.display(value)
         self.publish_value(value)
 
-    def setup_ui(self, name):
+    def setup_ui(self, name, max_value=100000, min_value=-100000,
+                 default_max_value=100, default_min_value=-100,
+                 initial_value=0):
         self._min_spin_box = QtGui.QSpinBox()
-        self._min_spin_box.setMaximum(10000)
-        self._min_spin_box.setMinimum(-10000)
+        self._min_spin_box.setMaximum(max_value)
+        self._min_spin_box.setMinimum(min_value)
         self._slider = QtGui.QSlider(Qt.Horizontal)
         self._slider.setTickPosition(QtGui.QSlider.TicksBelow)
         self._slider.valueChanged.connect(self.slider_changed)
         self._max_spin_box = QtGui.QSpinBox()
-        self._max_spin_box.setMaximum(10000)
-        self._max_spin_box.setMinimum(-10000)
+        self._max_spin_box.setMaximum(max_value)
+        self._max_spin_box.setMinimum(min_value)
         self._lcd = QtGui.QLCDNumber()
         self._lcd.setMaximumHeight(LCD_HEIGHT)
         self._min_spin_box.valueChanged.connect(self._slider.setMinimum)
         self._max_spin_box.valueChanged.connect(self._slider.setMaximum)
-        self._min_spin_box.setValue(-10)
-        self._max_spin_box.setValue(10)
-        self._slider.setValue(0)
+        self._min_spin_box.setValue(default_min_value)
+        self._max_spin_box.setValue(default_max_value)
+        self._slider.setValue(initial_value)
         zero_button = QtGui.QPushButton('reset')
         zero_button.clicked.connect(lambda x: self._slider.setValue(0))
         self._horizontal_layout.addWidget(self._min_spin_box)
@@ -211,39 +213,17 @@ class IntValueWidget(ValueWidget):
 class UIntValueWidget(IntValueWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
-        self._type = int
-        ValueWidget.__init__(
+        IntValueWidget.__init__(
             self, topic_name, attributes, array_index, publisher, parent=parent)
 
     def setup_ui(self, name):
-        self._min_spin_box = QtGui.QSpinBox()
-        self._min_spin_box.setMaximum(10000)
-        self._min_spin_box.setMinimum(0)
-        self._slider = QtGui.QSlider(Qt.Horizontal)
-        self._slider.setTickPosition(QtGui.QSlider.TicksBelow)
-        self._slider.valueChanged.connect(self.slider_changed)
-        self._max_spin_box = QtGui.QSpinBox()
-        self._max_spin_box.setMaximum(10000)
-        self._max_spin_box.setMinimum(0)
-        self._lcd = QtGui.QLCDNumber()
-        self._lcd.setMaximumHeight(LCD_HEIGHT)
-        self._min_spin_box.valueChanged.connect(self._slider.setMinimum)
-        self._max_spin_box.valueChanged.connect(self._slider.setMaximum)
-        self._min_spin_box.setValue(0)
-        self._max_spin_box.setValue(10)
-        self._slider.setValue(0)
-        zero_button = QtGui.QPushButton('reset')
-        zero_button.clicked.connect(lambda x: self._slider.setValue(0))
-        self._horizontal_layout.addWidget(self._min_spin_box)
-        self._horizontal_layout.addWidget(self._slider)
-        self._horizontal_layout.addWidget(self._max_spin_box)
-        self._horizontal_layout.addWidget(self._lcd)
-        self._horizontal_layout.addWidget(zero_button)
-
-        self.setLayout(self._horizontal_layout)
+        IntValueWidget.setup_ui(self, name, min_value=0, default_min_value=0)
 
 
 class DoubleValueWidget(ValueWidget):
+
+    DEFAULT_MAX_VALUE = 10.0
+    DEFAULT_MIN_VALUE = -10.0
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
         self._type = float
@@ -267,14 +247,14 @@ class DoubleValueWidget(ValueWidget):
         self._min_spin_box = QtGui.QDoubleSpinBox()
         self._min_spin_box.setMaximum(10000)
         self._min_spin_box.setMinimum(-10000)
-        self._min_spin_box.setValue(-1.0)
+        self._min_spin_box.setValue(self.DEFAULT_MIN_VALUE)
         self._slider = QtGui.QSlider(Qt.Horizontal)
         self._slider.setTickPosition(QtGui.QSlider.TicksBelow)
         self._slider.valueChanged.connect(self.slider_changed)
         self._max_spin_box = QtGui.QDoubleSpinBox()
         self._max_spin_box.setMaximum(10000)
         self._max_spin_box.setMinimum(-10000)
-        self._max_spin_box.setValue(1.0)
+        self._max_spin_box.setValue(self.DEFAULT_MAX_VALUE)
         self._lcd = QtGui.QLCDNumber()
         self._lcd.setMaximumHeight(LCD_HEIGHT)
         self._slider.setValue(50)
@@ -382,10 +362,6 @@ class EasyPublisherWidget(QtGui.QWidget):
             self.sig_sysmsg.emit('%s does not exists' % text)
             return
         topic_name, attributes, builtin_type, is_array, array_index = results
-        if not attributes:
-            for break_down_string in self._model.get_topic_break_down_strings(topic_name):
-                self.add_slider_by_text(break_down_string)
-            return
         if builtin_type:
             if is_array and array_index == None:
                 # use index 0

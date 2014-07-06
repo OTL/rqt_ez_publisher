@@ -161,13 +161,6 @@ class EasyPublisherModel(object):
             self._publishers[topic_name] = self._publisher_class(
                 topic_name, message_class)
 
-    def get_topic_break_down_strings(self, topic_name):
-        if topic_name in self._publishers:
-            return flatten(make_topic_strings(
-                self._publishers[topic_name].get_message(), topic_name))
-        else:
-            return []
-
     def get_topic_names(self):
         _, _, topic_types = rospy.get_master().getTopicTypes()
         return sorted([x[0] for x in topic_types])
