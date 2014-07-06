@@ -23,8 +23,8 @@ class EzPublisherPlugin(Plugin):
         self._widget.setObjectName('EzPublisherPluginUi')
         self.mainwidget = PluginContainerWidget(self._widget, True, False)
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(
-                self._widget.windowTitle() + (' (%d)' % context.serial_number()))
+            self._widget.setWindowTitle(self._widget.windowTitle() +
+                                        (' (%d)' % context.serial_number()))
         context.add_widget(self._widget)
 
     def shutdown_plugin(self):
@@ -50,7 +50,8 @@ class EzPublisherPlugin(Plugin):
         for slider in self._widget.get_sliders():
             r = instance_settings.value(slider.get_text() + '_range')
             slider.set_range(r)
-            is_repeat = instance_settings.value(slider.get_text() + '_is_repeat')
+            is_repeat = instance_settings.value(
+                slider.get_text() + '_is_repeat')
             slider.set_is_repeat(is_repeat == 'true')
         interval = instance_settings.value('publish_interval')
         if interval:

@@ -7,16 +7,18 @@ from functools import reduce
 
 from rqt_py_common.topic_helpers import get_field_type
 
-# initial string must be topic name for get_field_type
+
 def make_topic_strings(msg_instance, string=''):
     if isinstance(msg_instance, list):
         array_instance = get_field_type(string)[0]()
         return make_topic_strings(array_instance, string + '[0]')
     try:
-        return [make_topic_strings(msg_instance.__getattribute__(slot), string + '/' + slot)
+        return [make_topic_strings(msg_instance.__getattribute__(slot),
+                                   string + '/' + slot)
                 for slot in msg_instance.__slots__]
-    except AttributeError as e:
+    except AttributeError:
         return string
+
 
 def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
                             array_index, value):
@@ -29,17 +31,18 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
             if m:
                 array_type = get_field_type(full_string)[0]
                 index = int(m.group(2))
-                while len(message_target.__getattribute__(m.group(1))) <= index:
-                    message_target.__getattribute__(m.group(1)).append(array_type())
-                message_target = message_target.__getattribute__(m.group(1))[index]
-            elif get_field_type(full_string)[1]: # this is impossible
+                attr = m.group(1)
+                while len(message_target.__getattribute__(attr)) <= index:
+                    message_target.__getattribute__(attr).append(array_type())
+                message_target = message_target.__getattribute__(attr)[index]
+            elif get_field_type(full_string)[1]:  # this is impossible
                 array_type = get_field_type(full_string)[0]
                 if len(message_target.__getattribute__(attr)) == 0:
                     message_target.__getattribute__(attr).append(array_type())
                 message_target = message_target.__getattribute__(attr)[0]
             else:
                 message_target = message_target.__getattribute__(attr)
-    if array_index != None:
+    if array_index is not None:
         array = message_target.__getattribute__(attributes[-1])
         while len(array) <= array_index:
             array.append(type())
@@ -65,7 +68,7 @@ def find_topic_name(full_text, topic_dict):
         return (full_text, None, None)
     splited_text = full_text.split('/')[1:]
     topic_name = ''
-    while not topic_name in topic_dict and splited_text:
+    while topic_name not in topic_dict and splited_text:
         topic_name += '/' + splited_text[0]
         splited_text = splited_text[1:]
     if splited_text:
@@ -117,7 +120,7 @@ def get_value_type(topic_type_str, attributes):
 
 def make_text(topic_name, attributes, array_index):
     text = topic_name + '/' + '/'.join(attributes)
-    if array_index != None:
+    if array_index is not None:
         text += '[%d]' % array_index
     return text
 
@@ -157,7 +160,7 @@ class EasyPublisherModel(object):
             return None
 
     def _add_publisher_if_not_exists(self, topic_name, message_class):
-        if not topic_name in self._publishers:
+        if topic_name not in self._publishers:
             self._publishers[topic_name] = self._publisher_class(
                 topic_name, message_class)
 
@@ -169,11 +172,11 @@ class EasyPublisherModel(object):
         text = copy.copy(input_text)
         try:
             if get_field_type(text)[1]:
-                if array_index == None:
+                if array_index is None:
                     index = 0
                 else:
                     index = array_index
-                text += '[%s]'%index
+                text += '[%s]' % index
             type = get_field_type(text)[0]
             if type:
                 return flatten(make_topic_strings(type(), text))

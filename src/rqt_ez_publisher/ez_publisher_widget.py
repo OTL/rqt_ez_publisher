@@ -49,13 +49,14 @@ class TopicPublisherWithTimer(TopicPublisher):
 
     def request_update(self):
         for slider in self._manager.get_sliders_for_topic(
-            self.get_topic_name()):
+                self.get_topic_name()):
             slider.update()
 
 
 class ValueWidget(QtGui.QWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self._attributes = attributes
         self._publisher = publisher
@@ -66,13 +67,16 @@ class ValueWidget(QtGui.QWidget):
         topic_label = QtGui.QLabel(self._text)
         self.close_button = QtGui.QPushButton()
         self.close_button.setMaximumWidth(30)
-        self.close_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+        self.close_button.setIcon(
+            self.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
         self.up_button = QtGui.QPushButton()
-        self.up_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_ArrowUp))
+        self.up_button.setIcon(
+            self.style().standardIcon(QtGui.QStyle.SP_ArrowUp))
         self.up_button.setMaximumWidth(30)
         self.down_button = QtGui.QPushButton()
         self.down_button.setMaximumWidth(30)
-        self.down_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_ArrowDown))
+        self.down_button.setIcon(
+            self.style().standardIcon(QtGui.QStyle.SP_ArrowDown))
         repeat_label = QtGui.QLabel('repeat')
         self._repeat_box = QtGui.QCheckBox()
         self._repeat_box.stateChanged.connect(self.repeat_changed)
@@ -83,7 +87,7 @@ class ValueWidget(QtGui.QWidget):
         self._horizontal_layout.addWidget(self.down_button)
         self._horizontal_layout.addWidget(repeat_label)
         self._horizontal_layout.addWidget(self._repeat_box)
-        if self._array_index != None:
+        if self._array_index is not None:
             self.add_button = QtGui.QPushButton('+')
             self.add_button.setMaximumWidth(30)
             self._horizontal_layout.addWidget(self.add_button)
@@ -114,8 +118,9 @@ class ValueWidget(QtGui.QWidget):
         return self._text
 
     def publish_value(self, value):
-        set_msg_attribute_value(self._publisher.get_message(), self._topic_name,
-                                self._type, self._attributes, self._array_index, value)
+        set_msg_attribute_value(self._publisher.get_message(),
+                                self._topic_name, self._type, self._attributes,
+                                self._array_index, value)
         self._publisher.publish()
 
     def setup_ui(self, name):
@@ -130,10 +135,11 @@ class ValueWidget(QtGui.QWidget):
 
 class BoolValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
         self._type = bool
-        ValueWidget.__init__(
-            self, topic_name, attributes, array_index, publisher, parent=parent)
+        ValueWidget.__init__(self, topic_name, attributes, array_index,
+                             publisher, parent=parent)
 
     def state_changed(self, state):
         self.publish_value(self._check_box.isChecked())
@@ -147,10 +153,11 @@ class BoolValueWidget(ValueWidget):
 
 class StringValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
         self._type = str
-        ValueWidget.__init__(
-            self, topic_name, attributes, array_index, publisher, parent=parent)
+        ValueWidget.__init__(self, topic_name, attributes, array_index,
+                             publisher, parent=parent)
 
     def input_text(self):
         self.publish_value(str(self._line_edit.text()))
@@ -164,10 +171,11 @@ class StringValueWidget(ValueWidget):
 
 class IntValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
         self._type = int
-        ValueWidget.__init__(
-            self, topic_name, attributes, array_index, publisher, parent=parent)
+        ValueWidget.__init__(self, topic_name, attributes, array_index,
+                             publisher, parent=parent)
 
     def slider_changed(self, value):
         self._lcd.display(value)
@@ -212,9 +220,10 @@ class IntValueWidget(ValueWidget):
 
 class UIntValueWidget(IntValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
-        IntValueWidget.__init__(
-            self, topic_name, attributes, array_index, publisher, parent=parent)
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
+        IntValueWidget.__init__(self, topic_name, attributes, array_index,
+                                publisher, parent=parent)
 
     def setup_ui(self, name):
         IntValueWidget.setup_ui(self, name, min_value=0, default_min_value=0)
@@ -225,20 +234,24 @@ class DoubleValueWidget(ValueWidget):
     DEFAULT_MAX_VALUE = 10.0
     DEFAULT_MIN_VALUE = -10.0
 
-    def __init__(self, topic_name, attributes, array_index, publisher, parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
         self._type = float
-        ValueWidget.__init__(
-            self, topic_name, attributes, array_index, publisher, parent=parent)
+        ValueWidget.__init__(self, topic_name, attributes, array_index,
+                             publisher, parent=parent)
 
     def set_value(self, value):
         self._lcd.display(value)
         self.publish_value(value)
 
     def value_to_slider(self, value):
-        return (value - self._min_spin_box.value()) / (self._max_spin_box.value() - self._min_spin_box.value()) * 100
+        return (value - self._min_spin_box.value()) / (
+            (self._max_spin_box.value() - self._min_spin_box.value()) * 100)
 
     def slider_to_value(self, val):
-        return self._min_spin_box.value() + (self._max_spin_box.value() - self._min_spin_box.value()) / 100.0 * val
+        return self._min_spin_box.value() + (
+            (self._max_spin_box.value() -
+             self._min_spin_box.value()) / 100.0 * val)
 
     def slider_changed(self, val):
         self.set_value(self.slider_to_value(val))
@@ -306,7 +319,8 @@ class EasyPublisherWidget(QtGui.QWidget):
             text = make_text(topic_name, attributes, array_index)
         return array_index
 
-    def add_widget(self, output_type, topic_name, attributes, array_index, position=None):
+    def add_widget(self, output_type, topic_name, attributes, array_index,
+                   position=None):
         widget_class = None
         type_class_dict = {float: DoubleValueWidget,
                            int: IntValueWidget,
@@ -331,9 +345,10 @@ class EasyPublisherWidget(QtGui.QWidget):
             lambda x: self.move_down_widget(widget))
         if widget.add_button:
             widget.add_button.clicked.connect(
-                lambda x: self.add_widget(output_type, topic_name, attributes,
-                                          self.get_next_index(output_type, topic_name, attributes),
-                                          self._main_vertical_layout.indexOf(widget) + 1))
+                lambda x: self.add_widget(
+                    output_type, topic_name, attributes,
+                    self.get_next_index(output_type, topic_name, attributes),
+                    self._main_vertical_layout.indexOf(widget) + 1))
         if position:
             self._main_vertical_layout.insertWidget(position, widget)
         else:
@@ -351,7 +366,6 @@ class EasyPublisherWidget(QtGui.QWidget):
         if index > 1:
             self._main_vertical_layout.removeWidget(widget)
             self._main_vertical_layout.insertWidget(index - 1, widget)
-        
 
     def add_slider_by_text(self, text):
         if text in [x.get_text() for x in self._sliders]:
@@ -363,7 +377,7 @@ class EasyPublisherWidget(QtGui.QWidget):
             return
         topic_name, attributes, builtin_type, is_array, array_index = results
         if builtin_type:
-            if is_array and array_index == None:
+            if is_array and array_index is None:
                 # use index 0
                 array_index = 0
             self.add_widget(builtin_type, topic_name, attributes, array_index)
@@ -391,7 +405,8 @@ class EasyPublisherWidget(QtGui.QWidget):
         horizontal_layout = QtGui.QHBoxLayout()
         reload_button = QtGui.QPushButton(parent=self)
         reload_button.setMaximumWidth(30)
-        reload_button.setIcon(self.style().standardIcon(QtGui.QStyle.SP_BrowserReload))
+        reload_button.setIcon(
+            self.style().standardIcon(QtGui.QStyle.SP_BrowserReload))
         reload_button.clicked.connect(self.update_combo_items)
         topic_label = QtGui.QLabel('topic(+data member) name')
         clear_button = QtGui.QPushButton('all clear')
