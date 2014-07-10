@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2014-07-11)
+------------------
 * Update for indigo
 * Fix NoneType error for make_topic_string
 * Clean codes (applied pep8)
