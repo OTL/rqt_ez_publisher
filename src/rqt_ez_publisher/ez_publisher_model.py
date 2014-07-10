@@ -16,6 +16,8 @@ def get_field_type_capable_with_index(field_string):
         return get_field_type(field_string)
 
 def make_topic_strings(msg_instance, string=''):
+    if msg_instance is None:
+        return string
     if isinstance(msg_instance, list):
         array_instance = get_field_type_capable_with_index(string)[0]()
         return make_topic_strings(array_instance, string + '[0]')
