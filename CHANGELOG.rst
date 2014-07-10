@@ -2,6 +2,14 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update for indigo
+* Fix NoneType error for make_topic_string
+* Clean codes (applied pep8)
+* Support byte
+* Add sphinx doc
+
 0.0.3 (2014-07-05)
 ------------------
 * Add tests that uses ros
