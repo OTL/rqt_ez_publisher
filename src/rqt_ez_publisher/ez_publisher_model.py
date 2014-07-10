@@ -8,9 +8,16 @@ from functools import reduce
 from rqt_py_common.topic_helpers import get_field_type
 
 
+def get_field_type_capable_with_index(field_string):
+    m = re.search('(.+)(\[[0-9]+\])', field_string)
+    if m:
+        return get_field_type(m.group(1))
+    else:
+        return get_field_type(field_string)
+
 def make_topic_strings(msg_instance, string=''):
     if isinstance(msg_instance, list):
-        array_instance = get_field_type(string)[0]()
+        array_instance = get_field_type_capable_with_index(string)[0]()
         return make_topic_strings(array_instance, string + '[0]')
     try:
         return [make_topic_strings(msg_instance.__getattribute__(slot),
@@ -29,14 +36,14 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
             full_string += '/' + attr
             m = re.search('(\w+)\[([0-9]+)\]', attr)
             if m:
-                array_type = get_field_type(full_string)[0]
                 index = int(m.group(2))
                 attr = m.group(1)
+                array_type = get_field_type_capable_with_index(full_string)[0]
                 while len(message_target.__getattribute__(attr)) <= index:
                     message_target.__getattribute__(attr).append(array_type())
                 message_target = message_target.__getattribute__(attr)[index]
-            elif get_field_type(full_string)[1]:  # this is impossible
-                array_type = get_field_type(full_string)[0]
+            elif get_field_type_capable_with_index(full_string)[1]:  # this is impossible
+                array_type = get_field_type_capable_with_index(full_string)[0]
                 if len(message_target.__getattribute__(attr)) == 0:
                     message_target.__getattribute__(attr).append(array_type())
                 message_target = message_target.__getattribute__(attr)[0]
@@ -90,7 +97,6 @@ def get_value_type(topic_type_str, attributes):
     try:
         _, spec = roslib.msgs.load_by_type(topic_type_str)
     except roslib.msgs.MsgSpecException as e:
-        print e
         return (None, False)
     try:
         head_attribute = attributes[0].split('[')[0]
@@ -171,15 +177,18 @@ class EasyPublisherModel(object):
     def expand_attribute(self, input_text, array_index=None):
         text = copy.copy(input_text)
         try:
-            if get_field_type(text)[1]:
+            msg_type, is_array = get_field_type_capable_with_index(text)
+            if is_array:
                 if array_index is None:
-                    index = 0
+                    text += '[0]'
                 else:
-                    index = array_index
-                text += '[%s]' % index
-            type = get_field_type(text)[0]
-            if type:
-                return flatten(make_topic_strings(type(), text))
+                    array_string = '[%d]' % array_index
+                    if not text.endswith(array_string):
+                        text += array_string
+            if msg_type == int: # for time ? not support
+                return []
+            elif msg_type:
+                return flatten(make_topic_strings(msg_type(), text))
             else:
                 return []
         except AttributeError as e:

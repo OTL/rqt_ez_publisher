@@ -31,8 +31,7 @@ class RosFunctionTest(unittest.TestCase):
         wait_topics()
 
     def test_make_topic_strings_with_array_non_builtin(self):
-        strings = ez_model.make_topic_strings(geo_msgs.Polygon(),
-                                              '/polygon')
+        strings = ez_model.make_topic_strings(geo_msgs.Polygon(), '/polygon')
         self.assertEqual(len(strings), 1)
         self.assertEqual(strings[0][0], '/polygon/points[0]/x')
         self.assertEqual(strings[0][1], '/polygon/points[0]/y')
@@ -109,6 +108,10 @@ class ModelTest(unittest.TestCase):
         strings = self.model.expand_attribute('/joint_states/position', 2)
         self.assertEqual(len(strings), 1)
         self.assertEqual(strings[0], '/joint_states/position[2]')
+
+    def test_expand_attribute_joint_states_header(self):
+        strings = self.model.expand_attribute('/joint_states/header/stamp/secs')
+        self.assertEqual(len(strings), 0)
 
     def test_expand_attribute_joint_states(self):
         strings = self.model.expand_attribute('/joint_states')
