@@ -10,14 +10,10 @@ import rqt_ez_publisher.ez_publisher_model as ez_model
 
 PKG='rqt_ez_publisher'
 
-def dummy_callback(self, msg):
-    pass
-
 def wait_topics():
-    subscriber1 = rospy.Subscriber('/polygon', geo_msgs.Polygon, dummy_callback)
-    subscriber2 = rospy.Subscriber('/joint_states', sen_msgs.JointState, dummy_callback)
-    while (subscriber1.get_num_connections() > 0) and (
-            subscriber2.get_num_connections() > 0):
+    _, _, topic_types = rospy.get_master().getTopicTypes()
+    topic_dict = dict(topic_types)
+    while '/joint_states' not in topic_dict or '/polygon' not in topic_dict:
         rospy.sleep(0.1)
 
 
@@ -128,5 +124,6 @@ class ModelTest(unittest.TestCase):
 
 if __name__ == '__main__':
     import rostest
+    rospy.init_node('ez_publisher_model_test')
     rostest.rosrun(PKG, 'ros_function_test', RosFunctionTest)
     rostest.rosrun(PKG, 'model_test', ModelTest)

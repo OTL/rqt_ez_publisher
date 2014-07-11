@@ -15,12 +15,18 @@ def get_field_type_capable_with_index(field_string):
     else:
         return get_field_type(field_string)
 
+
 def make_topic_strings(msg_instance, string=''):
     if msg_instance is None:
         return string
     if isinstance(msg_instance, list):
-        array_instance = get_field_type_capable_with_index(string)[0]()
-        return make_topic_strings(array_instance, string + '[0]')
+        msg_type = get_field_type_capable_with_index(string)[0]
+        if msg_type is not None:
+            array_instance = msg_type()
+            return make_topic_strings(array_instance, string + '[0]')
+        else:
+            print 'not found type of %s' % string
+            return ''
     try:
         return [make_topic_strings(msg_instance.__getattribute__(slot),
                                    string + '/' + slot)
@@ -70,6 +76,8 @@ def flatten(complicated_list):
 
 
 def find_topic_name(full_text, topic_dict):
+    if full_text == '':
+        return (None, None, None)
     if full_text[0] != '/':
         full_text = '/' + full_text
     # This is topic
