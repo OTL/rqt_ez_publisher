@@ -9,7 +9,7 @@ from rqt_py_common.topic_helpers import get_field_type
 
 
 def get_field_type_capable_with_index(field_string):
-    m = re.search('(.+)(\[[0-9]+\])', field_string)
+    m = re.search('(.+)(\[[0-9]+\])$', field_string)
     if m:
         return get_field_type(m.group(1))
     else:
@@ -42,7 +42,7 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
         full_string = topic_name
         for attr in attributes[:-1]:
             full_string += '/' + attr
-            m = re.search('(\w+)\[([0-9]+)\]', attr)
+            m = re.search('(\w+)\[([0-9]+)\]$', attr)
             if m:
                 index = int(m.group(2))
                 attr = m.group(1)
@@ -51,6 +51,7 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
                     message_target.__getattribute__(attr).append(array_type())
                 message_target = message_target.__getattribute__(attr)[index]
             elif get_field_type_capable_with_index(full_string)[1]:  # this is impossible
+                print full_string
                 array_type = get_field_type_capable_with_index(full_string)[0]
                 if len(message_target.__getattribute__(attr)) == 0:
                     message_target.__getattribute__(attr).append(array_type())
@@ -153,6 +154,9 @@ class TopicPublisher(object):
         return self._name
 
     def publish(self):
+        if hasattr(self._message, 'header'):
+            if hasattr(self._message.header, 'stamp'):
+                self._message.header.stamp = rospy.Time.now()
         self._publisher.publish(self._message)
 
     def get_message(self):
