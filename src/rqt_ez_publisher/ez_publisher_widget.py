@@ -232,8 +232,8 @@ class UIntValueWidget(IntValueWidget):
 
 class DoubleValueWidget(ValueWidget):
 
-    DEFAULT_MAX_VALUE = 10.0
-    DEFAULT_MIN_VALUE = -10.0
+    DEFAULT_MAX_VALUE = 1.0
+    DEFAULT_MIN_VALUE = -1.0
 
     def __init__(self, topic_name, attributes, array_index, publisher,
                  parent=None):
