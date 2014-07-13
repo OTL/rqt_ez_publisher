@@ -118,7 +118,7 @@ def get_value_type(topic_type_str, attributes):
         if field.is_builtin:
             if attr_type in ['int8', 'int16', 'int32', 'int64']:
                 return_type = int
-            if attr_type in ['byte', 'uint8', 'uint16', 'uint32', 'uint64']:
+            elif attr_type in ['byte', 'uint8', 'uint16', 'uint32', 'uint64']:
                 return_type = 'uint'
             elif attr_type in ['float32', 'float64']:
                 return_type = float
