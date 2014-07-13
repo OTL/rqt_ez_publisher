@@ -79,6 +79,18 @@ class ModelTest(unittest.TestCase):
     def test_get_publisher_not_exists(self):
         self.assertEqual(self.model.get_publisher('not_exists'), None)
 
+    def test_expand_no_attribute_polygon(self):
+        strings = self.model.expand_attribute('/polygon/xxx', None)
+        self.assertEqual(strings, [])
+
+    def test_expand_no_attribute_array_polygon(self):
+        strings = self.model.expand_attribute('/polygon/xxx', 0)
+        self.assertEqual(strings, [])
+
+    def test_expand_no_attribute_array_polygon(self):
+        strings = self.model.expand_attribute('/polygon/xxx[0]', None)
+        self.assertEqual(strings, [])
+
     def test_expand_attribute_polygon(self):
         strings = self.model.expand_attribute('/polygon/points', None)
         self.assertEqual(len(strings), 3)
