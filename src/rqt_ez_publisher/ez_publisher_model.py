@@ -1,19 +1,19 @@
 import copy
+import functools
 import re
-import rospy
 import roslib.message
 import roslib.msgs
-from functools import reduce
-
-from rqt_py_common.topic_helpers import get_field_type
+import rospy
+import tf2_msgs.msg
+from rqt_py_common import topic_helpers as helpers
 
 
 def get_field_type_capable_with_index(field_string):
     m = re.search('(.+)(\[[0-9]+\])$', field_string)
     if m:
-        return get_field_type(m.group(1))
+        return helpers.get_field_type(m.group(1))
     else:
-        return get_field_type(field_string)
+        return helpers.get_field_type(field_string)
 
 
 def make_topic_strings(msg_instance, string=''):
@@ -50,7 +50,7 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
                 while len(message_target.__getattribute__(attr)) <= index:
                     message_target.__getattribute__(attr).append(array_type())
                 message_target = message_target.__getattribute__(attr)[index]
-            elif get_field_type_capable_with_index(full_string)[1]:  # this is impossible
+            elif get_field_type_capable_with_index(full_string)[1]:
                 print full_string
                 array_type = get_field_type_capable_with_index(full_string)[0]
                 if len(message_target.__getattribute__(attr)) == 0:
@@ -71,7 +71,8 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
 
 def flatten(complicated_list):
     if isinstance(complicated_list, list):
-        return reduce(lambda a, b: a + flatten(b), complicated_list, [])
+        return functools.reduce(lambda a, b:
+                                a + flatten(b), complicated_list, [])
     else:
         return [complicated_list]
 
@@ -107,7 +108,7 @@ def get_value_type(topic_type_str, attributes):
         return (None, False)
     try:
         _, spec = roslib.msgs.load_by_type(topic_type_str)
-    except roslib.msgs.MsgSpecException as e:
+    except roslib.msgs.MsgSpecException:
         return (None, False)
     try:
         head_attribute = attributes[0].split('[')[0]
@@ -116,21 +117,22 @@ def get_value_type(topic_type_str, attributes):
         attr_type = field.base_type
         if field.is_builtin:
             if attr_type in ['int8', 'int16', 'int32', 'int64']:
-                return (int, field.is_array)
+                return_type = int
             if attr_type in ['byte', 'uint8', 'uint16', 'uint32', 'uint64']:
-                return ('uint', field.is_array)
+                return_type = 'uint'
             elif attr_type in ['float32', 'float64']:
-                return (float, field.is_array)
+                return_type = float
             elif attr_type == 'string':
-                return (str, field.is_array)
+                return_type = str
             elif attr_type == 'bool':
-                return (bool, field.is_array)
+                return_type = bool
             else:
                 print 'not support %s' % attr_type
                 return (None, False)
+            return (return_type, field.is_array)
         else:
             return get_value_type(field.base_type, attributes[1:])
-    except ValueError as e:
+    except ValueError:
         return (None, False)
     return (None, False)
 
@@ -154,13 +156,33 @@ class TopicPublisher(object):
         return self._name
 
     def publish(self):
-        if hasattr(self._message, 'header'):
-            if hasattr(self._message.header, 'stamp'):
-                self._message.header.stamp = rospy.Time.now()
         self._publisher.publish(self._message)
 
     def get_message(self):
         return self._message
+
+
+class TopicFillHeaderPublisher(TopicPublisher):
+
+    def __init__(self, topic_name, message_class):
+        super(TopicFillHeaderPublisher, self).__init__(
+            topic_name, message_class)
+        self._is_tf = False
+        if message_class == tf2_msgs.msg.TFMessage:
+            self._is_tf = True
+        self._has_header = False
+        if hasattr(self._message, 'header'):
+            if hasattr(self._message.header, 'stamp'):
+                self._has_header = True
+
+    def publish(self):
+        if self._is_tf:
+            now = rospy.Time.now()
+            for transform in self._message.transforms:
+                transform.header.stamp = now
+        if self._has_header:
+            self._message.header.stamp = rospy.Time.now()
+        super(TopicFillHeaderPublisher, self).publish()
 
 
 class EasyPublisherModel(object):
@@ -199,16 +221,16 @@ class EasyPublisherModel(object):
                     array_string = '[%d]' % array_index
                     if not text.endswith(array_string):
                         text += array_string
-            if msg_type == int: # for time ? not support
+            if msg_type == int:  # for time ? not support
                 return []
             elif msg_type:
                 return flatten(make_topic_strings(msg_type(), text))
             else:
                 return []
-        except AttributeError as e:
+        except AttributeError:
             return []
 
-    def resister_topic_by_text(self, text):
+    def register_topic_by_text(self, text):
         _, _, topic_types = rospy.get_master().getTopicTypes()
         topic_dict = dict(topic_types)
         topic_name, attributes, array_index = find_topic_name(text, topic_dict)
