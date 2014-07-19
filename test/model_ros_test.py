@@ -54,7 +54,7 @@ class TopicPublisherTest(unittest.TestCase):
         self._msg = msg
 
     def setUp(self):
-        self.publiser = ez_model.TopicPublisher('/topic', geo_msgs.Vector3)
+        self.publiser = ez_model.publisher.TopicPublisher('/topic', geo_msgs.Vector3)
         self.subscriber = rospy.Subscriber('/topic', geo_msgs.Vector3, self.callback)
         while self.subscriber.get_num_connections() == 0:
             rospy.sleep(0.1)
@@ -80,7 +80,7 @@ class ModelTest(unittest.TestCase):
 
     def setUp(self):
         wait_topics()
-        self.model = ez_model.EasyPublisherModel()
+        self.model = ez_model.EzPublisherModel(None)
 
     def test_get_publisher_not_exists(self):
         self.assertEqual(self.model.get_publisher('not_exists'), None)

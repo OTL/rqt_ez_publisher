@@ -4,7 +4,6 @@ import re
 import roslib.message
 import roslib.msgs
 import rospy
-import tf2_msgs.msg
 import geometry_msgs.msg
 from rqt_py_common import topic_helpers as helpers
 
@@ -156,50 +155,9 @@ def make_text(topic_name, attributes, array_index):
     return text
 
 
-class TopicPublisher(object):
+class EzPublisherModel(object):
 
-    def __init__(self, topic_name, message_class):
-        self._name = topic_name
-        self._publisher = rospy.Publisher(
-            topic_name, message_class, queue_size=100)
-        self._message = message_class()
-
-    def get_topic_name(self):
-        return self._name
-
-    def publish(self):
-        self._publisher.publish(self._message)
-
-    def get_message(self):
-        return self._message
-
-
-class TopicFillHeaderPublisher(TopicPublisher):
-
-    def __init__(self, topic_name, message_class):
-        super(TopicFillHeaderPublisher, self).__init__(
-            topic_name, message_class)
-        self._is_tf = False
-        if message_class == tf2_msgs.msg.TFMessage:
-            self._is_tf = True
-        self._has_header = False
-        if hasattr(self._message, 'header'):
-            if hasattr(self._message.header, 'stamp'):
-                self._has_header = True
-
-    def publish(self):
-        if self._is_tf:
-            now = rospy.Time.now()
-            for transform in self._message.transforms:
-                transform.header.stamp = now
-        if self._has_header:
-            self._message.header.stamp = rospy.Time.now()
-        super(TopicFillHeaderPublisher, self).publish()
-
-
-class EasyPublisherModel(object):
-
-    def __init__(self, publisher_class=TopicPublisher):
+    def __init__(self, publisher_class):
         self._publishers = {}
         self._publisher_class = publisher_class
 

@@ -1,8 +1,8 @@
 import os
 import rospy
-from .ez_publisher_widget import EasyPublisherWidget
-from .ez_publisher_widget import TopicPublisherWithTimer
-from .config_dialog import ConfigDialog
+from .ez_publisher_widget import EzPublisherWidget
+from . import publisher
+from . import config_dialog
 from rqt_py_common.plugin_container_widget import PluginContainerWidget
 from qt_gui.plugin import Plugin
 
@@ -19,7 +19,7 @@ class EzPublisherPlugin(Plugin):
                             help="Put plugin in silent mode")
         args, unknowns = parser.parse_known_args(context.argv())
         # Create QWidget
-        self._widget = EasyPublisherWidget()
+        self._widget = EzPublisherWidget()
         self._widget.setObjectName('EzPublisherPluginUi')
         self.mainwidget = PluginContainerWidget(self._widget, True, False)
         if context.serial_number() > 1:
@@ -35,7 +35,7 @@ class EzPublisherPlugin(Plugin):
         instance_settings.set_value(
             'texts', [x.get_text() for x in self._widget.get_sliders()])
         instance_settings.set_value(
-            'publish_interval', TopicPublisherWithTimer.publish_interval)
+            'publish_interval', publisher.TopicPublisherWithTimer.publish_interval)
         for slider in self._widget.get_sliders():
             instance_settings.set_value(
                 slider.get_text() + '_range', slider.get_range())
@@ -55,8 +55,8 @@ class EzPublisherPlugin(Plugin):
             slider.set_is_repeat(is_repeat == 'true')
         interval = instance_settings.value('publish_interval')
         if interval:
-            TopicPublisherWithTimer.publish_interval = int(interval)
+            publisher.TopicPublisherWithTimer.publish_interval = int(interval)
 
     def trigger_configuration(self):
-        dialog = ConfigDialog()
+        dialog = config_dialog.ConfigDialog()
         dialog.exec_()

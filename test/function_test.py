@@ -28,13 +28,6 @@ class FunctionTest(unittest.TestCase):
         self.assertEqual(len(strings[0]), 3)
         self.assertTrue('/cmd_vel/header/frame_id' in strings[0])
 
-# This needs roscore and publisher
-#    def test_make_topic_strings_with_array(self):
-#        strings = ez_model.make_topic_strings(geo_msgs.Polygon(),
-#                                              '/polygon')
-#        self.assertEqual(len(strings), 1)
-#        self.assertEqual(strings[0], '/polygon/points')
-
     def test_flatten(self):
         flattened = ez_model.flatten([0, [[1, 2], 3, 4], [5, 6], [7], 8])
         self.assertEqual(len(flattened), 9)
