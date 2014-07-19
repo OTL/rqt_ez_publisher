@@ -1,6 +1,7 @@
 from python_qt_binding import QtGui
 import value_widget
 
+
 class StringValueWidget(value_widget.ValueWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent):

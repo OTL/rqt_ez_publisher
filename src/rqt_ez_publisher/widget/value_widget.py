@@ -1,6 +1,7 @@
 from python_qt_binding import QtGui
 from .. import ez_publisher_model as ez_model
 
+
 class ValueWidget(QtGui.QWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent,
@@ -45,10 +46,13 @@ class ValueWidget(QtGui.QWidget):
             self._horizontal_layout.addWidget(self.add_button)
         else:
             self.add_button = None
-        self.close_button.clicked.connect(lambda x: self._parent.close_slider(self))
-        self.up_button.clicked.connect(lambda x: self._parent.move_up_widget(self))
-        self.down_button.clicked.connect(lambda x: self._parent.move_down_widget(self))
-        self.setup_ui(self._text)            
+        self.close_button.clicked.connect(
+            lambda x: self._parent.close_slider(self))
+        self.up_button.clicked.connect(
+            lambda x: self._parent.move_up_widget(self))
+        self.down_button.clicked.connect(
+            lambda x: self._parent.move_down_widget(self))
+        self.setup_ui(self._text)
 
     def get_topic_name(self):
         return self._topic_name

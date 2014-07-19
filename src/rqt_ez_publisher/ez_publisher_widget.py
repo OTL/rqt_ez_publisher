@@ -7,6 +7,8 @@ from rqt_ez_publisher import publisher
 
 
 class EzPublisherWidget(QtGui.QWidget):
+    '''Main widget of this GUI'''
+
     sig_sysmsg = QtCore.Signal(str)
 
     def __init__(self, parent=None):
@@ -136,7 +138,8 @@ class EzPublisherWidget(QtGui.QWidget):
         horizontal_layout.addWidget(clear_button)
         self._main_vertical_layout = QtGui.QVBoxLayout()
         self._main_vertical_layout.addLayout(horizontal_layout)
-        self._main_vertical_layout.setAlignment(horizontal_layout, QtCore.Qt.AlignTop)
+        self._main_vertical_layout.setAlignment(
+            horizontal_layout, QtCore.Qt.AlignTop)
         self.setLayout(self._main_vertical_layout)
 
     def shutdown(self):

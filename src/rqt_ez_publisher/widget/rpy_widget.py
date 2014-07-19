@@ -3,6 +3,7 @@ import math
 from python_qt_binding import QtGui
 import rpy_value_widget
 
+
 class RPYWidget(QtGui.QWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher,

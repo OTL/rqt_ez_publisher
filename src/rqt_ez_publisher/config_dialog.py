@@ -3,7 +3,11 @@ from python_qt_binding.QtGui import QDialog
 from python_qt_binding.QtGui import QDialogButtonBox
 from . import widget
 
+
 class ConfigDialog(QDialog):
+    '''Dialog for configure button of rqt system
+
+    - set time interval for repeated publishing'''
 
     def __init__(self):
         super(ConfigDialog, self).__init__()

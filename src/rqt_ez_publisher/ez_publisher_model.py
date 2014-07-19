@@ -9,6 +9,8 @@ from rqt_py_common import topic_helpers as helpers
 
 
 def get_field_type_capable_with_index(field_string):
+    '''get type even if it contains [] for array'''
+
     m = re.search('(.+)(\[[0-9]+\])$', field_string)
     if m:
         return helpers.get_field_type(m.group(1))
@@ -17,6 +19,8 @@ def get_field_type_capable_with_index(field_string):
 
 
 def make_topic_strings(msg_instance, string=''):
+    '''returns break down strings'''
+
     if msg_instance is None:
         return string
     if isinstance(msg_instance, list):
@@ -38,22 +42,24 @@ def make_topic_strings(msg_instance, string=''):
         return string
 
 
-def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
+def set_msg_attribute_value(msg_instance, topic_name, msg_type, attributes,
                             array_index, value):
+    '''set value to the attribute of topic'''
     message_target = msg_instance
     if len(attributes) >= 2:
-        message_target = get_msg_attribute_value(message_target, topic_name, attributes[:-1])
+        message_target = get_msg_attribute_value(
+            message_target, topic_name, attributes[:-1])
     if array_index is not None:
         array = message_target.__getattribute__(attributes[-1])
         while len(array) <= array_index:
-            array.append(type())
+            array.append(msg_type())
         array[array_index] = value
         message_target.__setattr__(attributes[-1], array)
     else:
         message_target.__setattr__(attributes[-1], value)
     message_target = value
 
-                                
+
 def get_msg_attribute_value(msg_instance, topic_name, attributes):
     message_target = msg_instance
     full_string = topic_name
@@ -156,6 +162,7 @@ def make_text(topic_name, attributes, array_index):
 
 
 class EzPublisherModel(object):
+    '''Model for rqt_ez_publisher'''
 
     def __init__(self, publisher_class):
         self._publishers = {}

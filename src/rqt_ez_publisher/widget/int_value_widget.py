@@ -2,6 +2,7 @@ from python_qt_binding import QtCore
 from python_qt_binding import QtGui
 import value_widget
 
+
 class IntValueWidget(value_widget.ValueWidget):
 
     LCD_HEIGHT = 35

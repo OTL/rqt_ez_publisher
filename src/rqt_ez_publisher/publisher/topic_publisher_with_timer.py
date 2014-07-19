@@ -3,12 +3,14 @@ from python_qt_binding import QtCore
 
 DEFAULT_PUBLISH_INTERVAL = 100
 
+
 class TopicPublisherWithTimer(topic_fill_header_publisher.TopicFillHeaderPublisher):
 
     publish_interval = DEFAULT_PUBLISH_INTERVAL
 
     def __init__(self, topic_name, message_class):
-        super(TopicPublisherWithTimer, self).__init__(topic_name, message_class)
+        super(TopicPublisherWithTimer, self).__init__(
+            topic_name, message_class)
         self._timer = None
         self._manager = None
 

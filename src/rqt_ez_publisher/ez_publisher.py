@@ -8,6 +8,7 @@ from qt_gui.plugin import Plugin
 
 
 class EzPublisherPlugin(Plugin):
+    '''Plugin top class for rqt'''
 
     def __init__(self, context):
         super(EzPublisherPlugin, self).__init__(context)

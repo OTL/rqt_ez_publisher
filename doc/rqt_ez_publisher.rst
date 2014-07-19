@@ -1,10 +1,7 @@
 rqt_ez_publisher package
 ========================
 
-Submodules
-----------
-
-rqt_ez_publisher.config_dialog module
+config_dialog module
 -------------------------------------
 
 .. automodule:: rqt_ez_publisher.config_dialog
@@ -12,7 +9,7 @@ rqt_ez_publisher.config_dialog module
     :undoc-members:
     :show-inheritance:
 
-rqt_ez_publisher.ez_publisher module
+ez_publisher module
 ------------------------------------
 
 .. automodule:: rqt_ez_publisher.ez_publisher
@@ -20,7 +17,7 @@ rqt_ez_publisher.ez_publisher module
     :undoc-members:
     :show-inheritance:
 
-rqt_ez_publisher.ez_publisher_model module
+ez_publisher_model module
 ------------------------------------------
 
 .. automodule:: rqt_ez_publisher.ez_publisher_model
@@ -28,19 +25,10 @@ rqt_ez_publisher.ez_publisher_model module
     :undoc-members:
     :show-inheritance:
 
-rqt_ez_publisher.ez_publisher_widget module
+ez_publisher_widget module
 -------------------------------------------
 
 .. automodule:: rqt_ez_publisher.ez_publisher_widget
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: rqt_ez_publisher
     :members:
     :undoc-members:
     :show-inheritance:

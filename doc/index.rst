@@ -8,6 +8,7 @@ rqt_ez_publisher
 
 rqt_ez_publisher is a plugin for rqt.
 This creates GUI for publishing topics.
+hoge
 
 .. figure::  images/joint_states.png
    :align:   center
@@ -31,6 +32,8 @@ Contents:
    :maxdepth: 2
 
    rqt_ez_publisher
+   rqt_ez_publisher.widget
+   rqt_ez_publisher.publisher
    changelog
 
 Indices and tables

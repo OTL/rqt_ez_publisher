@@ -1,5 +1,6 @@
 import rospy
 
+
 class TopicPublisher(object):
 
     def __init__(self, topic_name, message_class):
