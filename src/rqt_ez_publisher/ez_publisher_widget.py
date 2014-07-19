@@ -7,19 +7,17 @@ from rqt_ez_publisher import publisher
 
 
 class EzPublisherWidget(QtGui.QWidget):
+
     '''Main widget of this GUI'''
 
     sig_sysmsg = QtCore.Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, modules=[]):
         self._model = ez_model.EzPublisherModel(
-            publisher.TopicPublisherWithTimer)
+            publisher.TopicPublisherWithTimer, modules=modules)
         self._sliders = []
         QtGui.QWidget.__init__(self, parent=parent)
         self.setup_ui()
-
-    def add_slider(self):
-        self.add_slider_by_text(str(self._line_edit.text()))
 
     def add_slider_from_combo(self):
         self.add_slider_by_text(str(self._combo.currentText()))
@@ -30,7 +28,7 @@ class EzPublisherWidget(QtGui.QWidget):
             self._sliders.remove(widget)
         self._main_vertical_layout.removeWidget(widget)
 
-    def get_next_index(self, output_type, topic_name, attributes):
+    def get_next_index(self, topic_name, attributes):
         array_index = 0
         text = ez_model.make_text(topic_name, attributes, array_index)
         while text in [x.get_text() for x in self._sliders]:
@@ -45,8 +43,10 @@ class EzPublisherWidget(QtGui.QWidget):
                            int: ez_widget.IntValueWidget,
                            'uint': ez_widget.UIntValueWidget,
                            bool: ez_widget.BoolValueWidget,
-                           str: ez_widget.StringValueWidget,
-                           'RPY': ez_widget.RPYWidget}
+                           str: ez_widget.StringValueWidget}
+        for module in self._model.get_modules():
+            type_class_dict[
+                module.get_msg_string()] = module.get_widget_class()
         if output_type in type_class_dict:
             widget_class = type_class_dict[output_type]
         else:
@@ -58,9 +58,9 @@ class EzPublisherWidget(QtGui.QWidget):
         self._sliders.append(widget)
         if widget.add_button:
             widget.add_button.clicked.connect(
-                lambda x: self.add_widget(
+                lambda: self.add_widget(
                     output_type, topic_name, attributes,
-                    self.get_next_index(output_type, topic_name, attributes),
+                    self.get_next_index(topic_name, attributes),
                     self._main_vertical_layout.indexOf(widget) + 1))
         if position:
             self._main_vertical_layout.insertWidget(position, widget)

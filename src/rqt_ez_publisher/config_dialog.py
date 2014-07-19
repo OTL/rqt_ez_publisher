@@ -1,10 +1,11 @@
 from python_qt_binding import QtGui
 from python_qt_binding.QtGui import QDialog
 from python_qt_binding.QtGui import QDialogButtonBox
-from . import widget
+from . import publisher
 
 
 class ConfigDialog(QDialog):
+
     '''Dialog for configure button of rqt system
 
     - set time interval for repeated publishing'''
@@ -15,7 +16,7 @@ class ConfigDialog(QDialog):
         self._interval_spin_box.setMaximum(10000)
         self._interval_spin_box.setMinimum(1)
         self._interval_spin_box.setValue(
-            widget.TopicPublisherWithTimer.publish_interval)
+            publisher.TopicPublisherWithTimer.publish_interval)
         self._interval_spin_box.valueChanged.connect(self.update_interval)
         self._horizontal_layout = QtGui.QHBoxLayout()
         spin_label = QtGui.QLabel('Publish Interval for repeat [ms]')
@@ -25,4 +26,4 @@ class ConfigDialog(QDialog):
         self.adjustSize()
 
     def update_interval(self, interval):
-        TopicPublisherWithTimer.publish_interval = interval
+        publisher.TopicPublisherWithTimer.publish_interval = interval
