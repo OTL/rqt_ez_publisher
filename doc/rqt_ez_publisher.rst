@@ -9,10 +9,10 @@ config_dialog module
     :undoc-members:
     :show-inheritance:
 
-ez_publisher module
+ez_publisher_plugin module
 ------------------------------------
 
-.. automodule:: rqt_ez_publisher.ez_publisher
+.. automodule:: rqt_ez_publisher.ez_publisher_plugin
     :members:
     :undoc-members:
     :show-inheritance:

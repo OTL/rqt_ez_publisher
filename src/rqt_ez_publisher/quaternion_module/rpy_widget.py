@@ -1,14 +1,15 @@
 from .. import ez_publisher_model as ez_model
 import math
 from python_qt_binding import QtGui
+from ..widget import base_widget
 from . import rpy_value_widget
 
 
-class RPYWidget(QtGui.QWidget):
+class RPYWidget(base_widget.BaseWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher,
                  parent=None):
-        super(RPYWidget, self).__init__(parent=parent)
+        super(RPYWidget, self).__init__(topic_name, publisher, parent=parent)
         self._attributes = attributes
         self._publisher = publisher
         self._array_index = array_index
@@ -36,15 +37,9 @@ class RPYWidget(QtGui.QWidget):
         for widget in self._widgets:
             widget.set_range(r)
 
-    def is_repeat(self):
-        self._widgets[0].is_repeat()
-
     def set_is_repeat(self, is_repeat):
         for widget in self._widgets:
             widget.set_is_repeat(is_repeat)
-
-    def get_topic_name(self):
-        return self._topic_name
 
     def update(self):
         for widget in self._widgets:

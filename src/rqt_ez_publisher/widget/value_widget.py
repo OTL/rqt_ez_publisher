@@ -1,17 +1,16 @@
 from python_qt_binding import QtGui
+from . import base_widget
 from .. import ez_publisher_model as ez_model
 
 
-class ValueWidget(QtGui.QWidget):
+class ValueWidget(base_widget.BaseWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent,
                  label_text=None):
-        super(ValueWidget, self).__init__(parent=parent)
+        super(ValueWidget, self).__init__(topic_name, publisher, parent=parent)
         self._parent = parent
         self._attributes = attributes
-        self._publisher = publisher
         self._array_index = array_index
-        self._topic_name = topic_name
         self._text = ez_model.make_text(topic_name, attributes, array_index)
         self._horizontal_layout = QtGui.QHBoxLayout()
         if label_text is None:
@@ -53,19 +52,6 @@ class ValueWidget(QtGui.QWidget):
         self.down_button.clicked.connect(
             lambda x: self._parent.move_down_widget(self))
         self.setup_ui(self._text)
-
-    def get_topic_name(self):
-        return self._topic_name
-
-    def is_repeat(self):
-        return self._publisher.is_repeating()
-
-    def set_is_repeat(self, repeat_on):
-        if repeat_on:
-            self._publisher.set_timer()
-        else:
-            self._publisher.stop_timer()
-        self._publisher.request_update()
 
     def repeat_changed(self, state):
         self.set_is_repeat(state == 2)

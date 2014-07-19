@@ -1,3 +1,4 @@
+from .base_widget import BaseWidget
 from .bool_value_widget import BoolValueWidget
 from .double_value_widget import DoubleValueWidget
 from .int_value_widget import IntValueWidget
