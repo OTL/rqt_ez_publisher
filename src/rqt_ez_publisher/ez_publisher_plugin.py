@@ -1,16 +1,16 @@
 import os
 import rospy
-from .ez_publisher_widget import EzPublisherWidget
+from . import ez_publisher_widget
 from . import publisher
 from . import config_dialog
+from . import quaternion_module
 from rqt_py_common.plugin_container_widget import PluginContainerWidget
 from qt_gui.plugin import Plugin
-from .quaternion_module import quaternion_module
 
 
 class EzPublisherPlugin(Plugin):
 
-    '''Plugin top class for rqt'''
+    '''Plugin top class for rqt_ez_publisher'''
 
     def __init__(self, context):
         super(EzPublisherPlugin, self).__init__(context)
@@ -21,10 +21,8 @@ class EzPublisherPlugin(Plugin):
                             dest="quiet",
                             help="Put plugin in silent mode")
         args, unknowns = parser.parse_known_args(context.argv())
-        # Create QWidget
-
         modules = [quaternion_module.QuaternionModule()]
-        self._widget = EzPublisherWidget(modules=modules)
+        self._widget = ez_publisher_widget.EzPublisherWidget(modules=modules)
         self._widget.setObjectName('EzPublisherPluginUi')
         self.mainwidget = PluginContainerWidget(self._widget, True, False)
         if context.serial_number() > 1:

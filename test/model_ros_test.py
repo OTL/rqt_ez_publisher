@@ -7,6 +7,7 @@ import geometry_msgs.msg as geo_msgs
 import sensor_msgs.msg as sen_msgs
 
 import rqt_ez_publisher.ez_publisher_model as ez_model
+from rqt_ez_publisher import quaternion_module
 
 PKG='rqt_ez_publisher'
 
@@ -28,23 +29,29 @@ class RosFunctionTest(unittest.TestCase):
 
     def test_make_topic_strings_with_array_non_builtin(self):
         strings = ez_model.make_topic_strings(geo_msgs.Polygon(), '/polygon')
-        self.assertEqual(len(strings), 1)
-        self.assertEqual(strings[0][0], '/polygon/points[0]/x')
-        self.assertEqual(strings[0][1], '/polygon/points[0]/y')
-        self.assertEqual(strings[0][2], '/polygon/points[0]/z')
+        self.assertEqual(len(strings), 3)
+        self.assertEqual(strings[0], '/polygon/points[0]/x')
+        self.assertEqual(strings[1], '/polygon/points[0]/y')
+        self.assertEqual(strings[2], '/polygon/points[0]/z')
 
     def test_make_topic_strings_quaterion(self):
         strings = ez_model.make_topic_strings(geo_msgs.Quaternion(),
                                               '/pose/orientation')
+        self.assertEqual(len(strings), 4)
+        strings = ez_model.make_topic_strings(geo_msgs.Quaternion(),
+                                              '/pose/orientation',
+                                              modules=[quaternion_module.QuaternionModule()])
         self.assertEqual(len(strings), 1)
         self.assertEqual(strings[0], '/pose/orientation')
+
+
 
     def test_make_topic_strings_with_array_builtin(self):
         strings = ez_model.make_topic_strings(sen_msgs.JointState(),
                                               '/joint_states')
-        self.assertEqual(len(strings), 5)
-        self.assertEqual(strings[1], '/joint_states/name[0]')
-        self.assertEqual(strings[2], '/joint_states/position[0]')
+        self.assertEqual(len(strings), 8)
+        self.assertEqual('/joint_states/name[0]' in strings, True)
+        self.assertEqual('/joint_states/position[0]' in strings, True)
 
 
 
@@ -140,6 +147,7 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(strings[7], '/joint_states/effort[0]')
 
     def test_expand_pose_for_plugin(self):
+        self.model.add_module(quaternion_module.QuaternionModule())
         strings = self.model.expand_attribute('/pose')
         self.assertEqual(len(strings), 4)
         self.assertEqual(strings[0], '/pose/position/x')
