@@ -1,6 +1,7 @@
 import rospy
 import sys
 
+import tf.transformations
 from python_qt_binding import QtGui
 from python_qt_binding.QtCore import Qt, Signal, QTimer
 from .ez_publisher_model import *
@@ -56,16 +57,20 @@ class TopicPublisherWithTimer(TopicFillHeaderPublisher):
 
 class ValueWidget(QtGui.QWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher,
-                 parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent,
+                 label_text=None):
         QtGui.QWidget.__init__(self, parent=parent)
+        self._parent = parent
         self._attributes = attributes
         self._publisher = publisher
         self._array_index = array_index
         self._topic_name = topic_name
         self._text = make_text(topic_name, attributes, array_index)
         self._horizontal_layout = QtGui.QHBoxLayout()
-        topic_label = QtGui.QLabel(self._text)
+        if label_text is None:
+            self._topic_label = QtGui.QLabel(self._text)
+        else:
+            self._topic_label = QtGui.QLabel(label_text)
         self.close_button = QtGui.QPushButton()
         self.close_button.setMaximumWidth(30)
         self.close_button.setIcon(
@@ -82,7 +87,7 @@ class ValueWidget(QtGui.QWidget):
         self._repeat_box = QtGui.QCheckBox()
         self._repeat_box.stateChanged.connect(self.repeat_changed)
         self._repeat_box.setChecked(publisher.is_repeating())
-        self._horizontal_layout.addWidget(topic_label)
+        self._horizontal_layout.addWidget(self._topic_label)
         self._horizontal_layout.addWidget(self.close_button)
         self._horizontal_layout.addWidget(self.up_button)
         self._horizontal_layout.addWidget(self.down_button)
@@ -94,7 +99,10 @@ class ValueWidget(QtGui.QWidget):
             self._horizontal_layout.addWidget(self.add_button)
         else:
             self.add_button = None
-        self.setup_ui(self._text)
+        self.close_button.clicked.connect(lambda x: self._parent.close_slider(self))
+        self.up_button.clicked.connect(lambda x: self._parent.move_up_widget(self))
+        self.down_button.clicked.connect(lambda x: self._parent.move_down_widget(self))
+        self.setup_ui(self._text)            
 
     def get_topic_name(self):
         return self._topic_name
@@ -113,7 +121,7 @@ class ValueWidget(QtGui.QWidget):
         self.set_is_repeat(state == 2)
 
     def update(self):
-        self._repeat_box.setChecked(self._publisher.is_repeating())
+        self._repeat_box.setChecked(self.is_repeat())
 
     def get_text(self):
         return self._text
@@ -136,12 +144,11 @@ class ValueWidget(QtGui.QWidget):
 
 class BoolValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher,
-                 parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = bool
         ValueWidget.__init__(self, topic_name, attributes, array_index,
-                             publisher, parent=parent)
-
+                             publisher, parent)
+        
     def state_changed(self, state):
         self.publish_value(self._check_box.isChecked())
 
@@ -154,11 +161,10 @@ class BoolValueWidget(ValueWidget):
 
 class StringValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher,
-                 parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = str
         ValueWidget.__init__(self, topic_name, attributes, array_index,
-                             publisher, parent=parent)
+                             publisher, parent)
 
     def input_text(self):
         self.publish_value(str(self._line_edit.text()))
@@ -172,11 +178,10 @@ class StringValueWidget(ValueWidget):
 
 class IntValueWidget(ValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher,
-                 parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = int
         ValueWidget.__init__(self, topic_name, attributes, array_index,
-                             publisher, parent=parent)
+                             publisher, parent)
 
     def slider_changed(self, value):
         self._lcd.display(value)
@@ -221,10 +226,9 @@ class IntValueWidget(ValueWidget):
 
 class UIntValueWidget(IntValueWidget):
 
-    def __init__(self, topic_name, attributes, array_index, publisher,
-                 parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent):
         IntValueWidget.__init__(self, topic_name, attributes, array_index,
-                                publisher, parent=parent)
+                                publisher, parent)
 
     def setup_ui(self, name):
         IntValueWidget.setup_ui(self, name, min_value=0, default_min_value=0)
@@ -235,11 +239,11 @@ class DoubleValueWidget(ValueWidget):
     DEFAULT_MAX_VALUE = 1.0
     DEFAULT_MIN_VALUE = -1.0
 
-    def __init__(self, topic_name, attributes, array_index, publisher,
-                 parent=None):
+    def __init__(self, topic_name, attributes, array_index, publisher, parent,
+                 label_text=None):
         self._type = float
         ValueWidget.__init__(self, topic_name, attributes, array_index,
-                             publisher, parent=parent)
+                             publisher, parent, label_text=label_text)
 
     def set_value(self, value):
         self._lcd.display(value)
@@ -291,6 +295,93 @@ class DoubleValueWidget(ValueWidget):
         self._max_spin_box.setValue(min_max[1])
 
 
+class RPYValueWidget(DoubleValueWidget):
+
+    def __init__(self, topic_name, attributes, array_index, publisher, rpy_index, parent):
+        self._type = 'RPY'
+        self._rpy_index = rpy_index
+
+        if self._rpy_index == 0:
+            title = make_text(topic_name, attributes + ['roll'], array_index)
+        elif self._rpy_index == 1:
+            title = make_text(topic_name, attributes + ['pitch'], array_index)
+        elif self._rpy_index == 2:
+            title = make_text(topic_name, attributes + ['yaw'], array_index)
+        else:
+            rospy.logerr('this is impossible, rpy[%d]' % rpy_index)
+        DoubleValueWidget.__init__(self, topic_name, attributes, array_index,
+                                   publisher, parent, label_text=title)
+        
+    def publish_value(self, value):
+        q_msg = get_msg_attribute_value(self._publisher.get_message(),
+                                        self._topic_name, self._attributes)
+        rpy = tf.transformations.euler_from_quaternion([q_msg.x, q_msg.y, q_msg.z, q_msg.w])
+        rpy_list = list(rpy)
+        rpy_list[self._rpy_index] = value
+        new_q = tf.transformations.quaternion_from_euler(rpy_list[0], rpy_list[1], rpy_list[2])
+        set_msg_attribute_value(self._publisher.get_message(),
+                                self._topic_name, self._type, self._attributes + ['x'],
+                                self._array_index, new_q[0])
+        set_msg_attribute_value(self._publisher.get_message(),
+                                self._topic_name, self._type, self._attributes + ['y'],
+                                self._array_index, new_q[1])
+        set_msg_attribute_value(self._publisher.get_message(),
+                                self._topic_name, self._type, self._attributes + ['z'],
+                                self._array_index, new_q[2])
+        set_msg_attribute_value(self._publisher.get_message(),
+                                self._topic_name, self._type, self._attributes + ['w'],
+                                self._array_index, new_q[3])
+        self._publisher.publish()
+
+
+class RPYWidget(QtGui.QWidget):
+
+    def __init__(self, topic_name, attributes, array_index, publisher,
+                 parent=None):
+        QtGui.QWidget.__init__(self, parent=parent)
+        self._attributes = attributes
+        self._publisher = publisher
+        self._array_index = array_index
+        self._topic_name = topic_name
+        self._text = make_text(topic_name, attributes, array_index)
+        self._vertical_layout = QtGui.QVBoxLayout()
+        self._widgets = []
+            
+        PI = 3.141592
+        for i in range(3):
+            widget = RPYValueWidget(topic_name, attributes, array_index, publisher, i, self)
+            self._widgets.append(widget)
+            self._vertical_layout.addWidget(widget)
+
+        self.set_range([-PI, PI])
+        self.setLayout(self._vertical_layout)
+        self.add_button = None
+
+    def get_text(self):
+        return self._text
+
+    def get_range(self):
+        return self._widgets[0].get_range()
+
+    def set_range(self, r):
+        for widget in self._widgets:
+            widget.set_range(r)
+
+    def is_repeat(self):
+        self._widgets[0].is_repeat()
+
+    def set_is_repeat(self, is_repeat):
+        for widget in self._widgets:
+            widget.set_is_repeat(is_repeat)
+
+    def get_topic_name(self):
+        return self._topic_name
+
+    def update(self):
+        for widget in self._widgets:
+            widget.update()
+        
+
 class EasyPublisherWidget(QtGui.QWidget):
     sig_sysmsg = Signal(str)
 
@@ -327,7 +418,8 @@ class EasyPublisherWidget(QtGui.QWidget):
                            int: IntValueWidget,
                            'uint': UIntValueWidget,
                            bool: BoolValueWidget,
-                           str: StringValueWidget}
+                           str: StringValueWidget,
+                           'RPY': RPYWidget}
         if output_type in type_class_dict:
             widget_class = type_class_dict[output_type]
         else:
@@ -338,12 +430,6 @@ class EasyPublisherWidget(QtGui.QWidget):
                               parent=self)
         self._model.get_publisher(topic_name).set_manager(self)
         self._sliders.append(widget)
-        widget.close_button.clicked.connect(
-            lambda x: self.close_slider(widget))
-        widget.up_button.clicked.connect(
-            lambda x: self.move_up_widget(widget))
-        widget.down_button.clicked.connect(
-            lambda x: self.move_down_widget(widget))
         if widget.add_button:
             widget.add_button.clicked.connect(
                 lambda x: self.add_widget(

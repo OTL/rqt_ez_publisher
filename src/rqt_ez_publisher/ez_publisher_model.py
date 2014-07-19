@@ -5,6 +5,7 @@ import roslib.message
 import roslib.msgs
 import rospy
 import tf2_msgs.msg
+import geometry_msgs.msg
 from rqt_py_common import topic_helpers as helpers
 
 
@@ -27,6 +28,9 @@ def make_topic_strings(msg_instance, string=''):
         else:
             print 'not found type of %s' % string
             return ''
+    # this should be replaced by plugin system
+    if isinstance(msg_instance, geometry_msgs.msg.Quaternion):
+        return [string]
     try:
         return [make_topic_strings(msg_instance.__getattribute__(slot),
                                    string + '/' + slot)
@@ -39,25 +43,7 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
                             array_index, value):
     message_target = msg_instance
     if len(attributes) >= 2:
-        full_string = topic_name
-        for attr in attributes[:-1]:
-            full_string += '/' + attr
-            m = re.search('(\w+)\[([0-9]+)\]$', attr)
-            if m:
-                index = int(m.group(2))
-                attr = m.group(1)
-                array_type = get_field_type_capable_with_index(full_string)[0]
-                while len(message_target.__getattribute__(attr)) <= index:
-                    message_target.__getattribute__(attr).append(array_type())
-                message_target = message_target.__getattribute__(attr)[index]
-            elif get_field_type_capable_with_index(full_string)[1]:
-                print full_string
-                array_type = get_field_type_capable_with_index(full_string)[0]
-                if len(message_target.__getattribute__(attr)) == 0:
-                    message_target.__getattribute__(attr).append(array_type())
-                message_target = message_target.__getattribute__(attr)[0]
-            else:
-                message_target = message_target.__getattribute__(attr)
+        get_msg_attribute_value(message_target, topic_name, attributes[:-1])
     if array_index is not None:
         array = message_target.__getattribute__(attributes[-1])
         while len(array) <= array_index:
@@ -67,6 +53,28 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
     else:
         message_target.__setattr__(attributes[-1], value)
     message_target = value
+                                
+def get_msg_attribute_value(msg_instance, topic_name, attributes):
+    full_string = topic_name
+    for attr in attributes:
+        full_string += '/' + attr
+        m = re.search('(\w+)\[([0-9]+)\]$', attr)
+        if m:
+            index = int(m.group(2))
+            attr = m.group(1)
+            array_type = get_field_type_capable_with_index(full_string)[0]
+            while len(message_target.__getattribute__(attr)) <= index:
+                message_target.__getattribute__(attr).append(array_type())
+            message_target = message_target.__getattribute__(attr)[index]
+        elif get_field_type_capable_with_index(full_string)[1]:
+            print full_string
+            array_type = get_field_type_capable_with_index(full_string)[0]
+            if len(message_target.__getattribute__(attr)) == 0:
+                message_target.__getattribute__(attr).append(array_type())
+            message_target = message_target.__getattribute__(attr)[0]
+        else:
+            message_target = message_target.__getattribute__(attr)
+    return message_target
 
 
 def flatten(complicated_list):
@@ -131,6 +139,8 @@ def get_value_type(topic_type_str, attributes):
                 return (None, False)
             return (return_type, field.is_array)
         else:
+            if field.base_type == 'geometry_msgs/Quaternion':
+                return ('RPY', field.is_array)
             return get_value_type(field.base_type, attributes[1:])
     except ValueError:
         return (None, False)

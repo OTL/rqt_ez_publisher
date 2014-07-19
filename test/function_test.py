@@ -105,6 +105,10 @@ class FunctionTest(unittest.TestCase):
         text = ez_model.make_text('/cmd_vel', ['linear', 'x'], 2)
         self.assertEqual(text, '/cmd_vel/linear/x[2]')
 
+    def test_get_value_type_quaternion(self):
+        msg_type, is_array = ez_model.get_value_type('geometry_msgs/Pose', ['orientation'])
+        self.assertEqual(msg_type, 'RPY')
+        self.assertEqual(is_array, False)
 
 
 if __name__ == '__main__':

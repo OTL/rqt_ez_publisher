@@ -33,6 +33,12 @@ class RosFunctionTest(unittest.TestCase):
         self.assertEqual(strings[0][1], '/polygon/points[0]/y')
         self.assertEqual(strings[0][2], '/polygon/points[0]/z')
 
+    def test_make_topic_strings_quaterion(self):
+        strings = ez_model.make_topic_strings(geo_msgs.Quaternion(),
+                                              '/pose/orientation')
+        self.assertEqual(len(strings), 1)
+        self.assertEqual(strings[0], '/pose/orientation')
+
     def test_make_topic_strings_with_array_builtin(self):
         strings = ez_model.make_topic_strings(sen_msgs.JointState(),
                                               '/joint_states')
@@ -50,7 +56,7 @@ class TopicPublisherTest(unittest.TestCase):
     def setUp(self):
         self.publiser = ez_model.TopicPublisher('/topic', geo_msgs.Vector3)
         self.subscriber = rospy.Subscriber('/topic', geo_msgs.Vector3, self.callback)
-        while self.subscriber.get_num_connections() > 0:
+        while self.subscriber.get_num_connections() == 0:
             rospy.sleep(0.1)
         self._msg = None
 
@@ -132,6 +138,15 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(strings[5], '/joint_states/position[0]')
         self.assertEqual(strings[6], '/joint_states/velocity[0]')
         self.assertEqual(strings[7], '/joint_states/effort[0]')
+
+    def test_expand_pose_for_plugin(self):
+        strings = self.model.expand_attribute('/pose')
+        self.assertEqual(len(strings), 4)
+        self.assertEqual(strings[0], '/pose/position/x')
+        self.assertEqual(strings[1], '/pose/position/y')
+        self.assertEqual(strings[2], '/pose/position/z')
+        self.assertEqual(strings[3], '/pose/orientation')
+
 
 
 if __name__ == '__main__':
