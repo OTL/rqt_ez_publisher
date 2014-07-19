@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2014-07-19)
+------------------
 * Add tf for dependency
 * Refactoring
   - Use base_widget
