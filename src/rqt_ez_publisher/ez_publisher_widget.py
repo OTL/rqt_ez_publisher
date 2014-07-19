@@ -455,6 +455,9 @@ class EasyPublisherWidget(QtGui.QWidget):
             self._main_vertical_layout.insertWidget(index - 1, widget)
 
     def add_slider_by_text(self, text):
+        if text.endswith('/header/seq'):
+            rospy.loginfo('header/seq is not created')
+            return
         if text in [x.get_text() for x in self._sliders]:
             self.sig_sysmsg.emit('%s is already exists' % text)
             return

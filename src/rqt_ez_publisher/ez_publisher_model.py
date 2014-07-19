@@ -43,7 +43,7 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
                             array_index, value):
     message_target = msg_instance
     if len(attributes) >= 2:
-        get_msg_attribute_value(message_target, topic_name, attributes[:-1])
+        message_target = get_msg_attribute_value(message_target, topic_name, attributes[:-1])
     if array_index is not None:
         array = message_target.__getattribute__(attributes[-1])
         while len(array) <= array_index:
@@ -53,8 +53,10 @@ def set_msg_attribute_value(msg_instance, topic_name, type, attributes,
     else:
         message_target.__setattr__(attributes[-1], value)
     message_target = value
+
                                 
 def get_msg_attribute_value(msg_instance, topic_name, attributes):
+    message_target = msg_instance
     full_string = topic_name
     for attr in attributes:
         full_string += '/' + attr
