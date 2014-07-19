@@ -20,6 +20,7 @@
   <run_depend>rqt_gui</run_depend>
   <run_depend>rqt_gui_py</run_depend>
   <run_depend>rqt_py_common</run_depend>
+  <run_depend>tf</run_depend>
   <run_depend>tf2_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
 
