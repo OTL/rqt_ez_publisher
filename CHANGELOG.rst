@@ -2,6 +2,17 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add tf for dependency
+* Refactoring
+  - Use base_widget
+  - divided widgets into widget/
+  - moved publishers into publisher/
+  - rpy to quaternion_module/
+* do not create header/seq
+* Convert Quaternion to RPY
+
 0.1.0 (2014-07-13)
 ------------------
 * Change default for double 1.0
