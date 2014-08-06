@@ -1,5 +1,6 @@
 import os
 import rospy
+import yaml
 from . import ez_publisher_widget
 from . import publisher
 from . import config_dialog
@@ -15,12 +16,6 @@ class EzPublisherPlugin(Plugin):
     def __init__(self, context):
         super(EzPublisherPlugin, self).__init__(context)
         self.setObjectName('EzPublisher')
-        from argparse import ArgumentParser
-        parser = ArgumentParser()
-        parser.add_argument("-q", "--quiet", action="store_true",
-                            dest="quiet",
-                            help="Put plugin in silent mode")
-        args, unknowns = parser.parse_known_args(context.argv())
         modules = [quaternion_module.QuaternionModule()]
         self._widget = ez_publisher_widget.EzPublisherWidget(modules=modules)
         self._widget.setObjectName('EzPublisherPluginUi')
@@ -29,10 +24,19 @@ class EzPublisherPlugin(Plugin):
             self._widget.setWindowTitle(self._widget.windowTitle() +
                                         (' (%d)' % context.serial_number()))
         context.add_widget(self._widget)
+        from argparse import ArgumentParser
+        parser = ArgumentParser(prog='rqt_ez_publisher')
+        EzPublisherPlugin.add_arguments(parser)
+        args, unknowns = parser.parse_known_args(context.argv())
+        self._loaded_settings = None
+        if args.slider_file is not None:
+            self._loaded_settings = yaml.load(open(args.slider_file).read())
+            self.restore_from_dict(self._loaded_settings)
 
     def shutdown_plugin(self):
-        pass
-        # self._widget.shutdown()
+        f = open('rqt_slider_settings.yaml', 'w')
+        f.write(yaml.safe_dump(self.save_to_dict(), encoding='utf-8', allow_unicode=True))
+        f.close()
 
     def save_settings(self, plugin_settings, instance_settings):
         instance_settings.set_value(
@@ -46,6 +50,8 @@ class EzPublisherPlugin(Plugin):
                 slider.get_text() + '_is_repeat', slider.is_repeat())
 
     def restore_settings(self, plugin_settings, instance_settings):
+        if self._loaded_settings is not None:
+            return
         texts = instance_settings.value('texts')
         if texts:
             for text in texts:
@@ -60,6 +66,48 @@ class EzPublisherPlugin(Plugin):
         if interval:
             publisher.TopicPublisherWithTimer.publish_interval = int(interval)
 
+    def restore_from_dict(self, settings):
+        for text in settings['texts']:
+            self._widget.add_slider_by_text(text)
+        for slider in self._widget.get_sliders():
+            try:
+                slider_setting = settings['settings'][slider.get_text()]
+                slider.set_range([slider_setting['min'], slider_setting['max']])
+                                  
+                slider.set_is_repeat(slider_setting['is_repeat'])
+            except KeyError as e:
+                pass
+        publisher.TopicPublisherWithTimer.publish_interval = (
+            settings['publish_interval'])
+        
+    def save_to_dict(self):
+        save_dict = {}
+        save_dict['texts'] = [x.get_text() for x in self._widget.get_sliders()]
+        save_dict['publish_interval'] = (
+            publisher.TopicPublisherWithTimer.publish_interval)
+        save_dict['settings'] = {}
+        for slider in self._widget.get_sliders():
+            save_dict['settings'][slider.get_text()] = {}
+            range_min, range_max = slider.get_range()
+            save_dict['settings'][slider.get_text()]['min'] = range_min
+            save_dict['settings'][slider.get_text()]['max'] = range_max
+            save_dict['settings'][slider.get_text()]['is_repeat'] = (
+                slider.is_repeat())
+        return save_dict
+
     def trigger_configuration(self):
         dialog = config_dialog.ConfigDialog()
         dialog.exec_()
+
+    @staticmethod
+    def _isfile(parser, arg):
+        if os.path.isfile(arg):
+            return arg
+        else:
+            parser.error("Setting file %s does not exist" % arg)
+                                                            
+    @staticmethod
+    def add_arguments(parser):
+        group = parser.add_argument_group('Options for rqt_ez_publisher plugin')
+        group.add_argument('--slider-file', type=lambda x: EzPublisherPlugin._isfile(parser, x),
+                           help="YAML setting file")

@@ -1,0 +1,13 @@
+publish_interval: 100
+texts:
+  - /cmd_vel/linear/x
+  - /cmd_vel/linear/z
+settings:
+  - /cmd_vel/linear/x:
+      min: -1.0
+      max: 1.0
+      is_repeat: true
+  - /cmd_vel/linear/z:
+      min: -1.0
+      max: 1.0
+      is_repeat: true

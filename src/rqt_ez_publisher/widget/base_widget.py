@@ -32,3 +32,5 @@ class BaseWidget(QtGui.QWidget):
 
     def update(self):
         pass
+
+#    def dump_to_yaml(self

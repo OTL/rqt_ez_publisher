@@ -20,7 +20,7 @@ class EzPublisherWidget(QtGui.QWidget):
         self.setup_ui()
 
     def add_slider_from_combo(self):
-        self.add_slider_by_text(str(self._combo.currentText()))
+        return self.add_slider_by_text(str(self._combo.currentText()))
 
     def close_slider(self, widget, remove=True):
         widget.hide()
