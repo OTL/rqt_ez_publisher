@@ -28,7 +28,7 @@ def make_topic_strings_internal(msg_instance, string='', modules=[]):
             array_instance = msg_type()
             return make_topic_strings_internal(array_instance, string + '[0]', modules=modules)
         else:
-            print 'not found type of %s' % string
+            rospy.logwarn('not found type of %s' % string)
             return []
     # this should be replaced by plugin system
     for module in modules:
@@ -74,7 +74,6 @@ def get_msg_attribute_value(msg_instance, topic_name, attributes):
                 message_target.__getattribute__(attr).append(array_type())
             message_target = message_target.__getattribute__(attr)[index]
         elif get_field_type_capable_with_index(full_string)[1]:
-            print full_string
             array_type = get_field_type_capable_with_index(full_string)[0]
             if len(message_target.__getattribute__(attr)) == 0:
                 message_target.__getattribute__(attr).append(array_type())
@@ -123,12 +122,25 @@ def find_topic_name(full_text, topic_dict):
 def get_value_type(topic_type_str, attributes, modules=[]):
     # for Header -> std_msgs/Header
     topic_type_str = roslib.msgs.resolve_type(topic_type_str, '')
+    spec = None
     if not attributes:
         return (None, False)
     try:
         _, spec = roslib.msgs.load_by_type(topic_type_str)
     except roslib.msgs.MsgSpecException:
         return (None, False)
+    except IOError as e: # not found
+        # for devel environment
+        import os
+        cmake_prefix_list = os.environ.get('CMAKE_PREFIX_PATH')
+        if cmake_prefix_list is not None:
+            package, msg = topic_type_str.split('/')
+            for path in cmake_prefix_list.split(':'):
+                msg_path = "%s/share/%s/msg/%s.msg"%(path, package, msg)
+                if os.path.exists(msg_path):
+                    _, spec = roslib.msgs.load_from_file(msg_path, package)
+                    rospy.logdebug('loaded %s/%s for devel environment'%(package, msg))
+                    break
     try:
         head_attribute = attributes[0].split('[')[0]
         index = spec.names.index(head_attribute)
@@ -146,7 +158,7 @@ def get_value_type(topic_type_str, attributes, modules=[]):
             elif attr_type == 'bool':
                 return_type = bool
             else:
-                print 'not support %s' % attr_type
+                rospy.logwarn('%s is not supported' % attr_type)
                 return (None, False)
             return (return_type, field.is_array)
         else:
@@ -154,7 +166,8 @@ def get_value_type(topic_type_str, attributes, modules=[]):
                 if field.base_type == module.get_msg_string():
                     return (module.get_msg_string(), field.is_array)
             return get_value_type(field.base_type, attributes[1:], modules=modules)
-    except ValueError:
+    except ValueError as e:
+        rospy.logwarn(e)
         return (None, False)
     return (None, False)
 
