@@ -241,7 +241,6 @@ class EzPublisherModel(object):
         topic_dict = dict(topic_types)
         topic_name, attributes, array_index = find_topic_name(text, topic_dict)
         if not topic_name:
-            rospy.logerr('%s not found' % text)
             return None
         topic_type_str = topic_dict[topic_name]
         message_class = roslib.message.get_message_class(topic_type_str)

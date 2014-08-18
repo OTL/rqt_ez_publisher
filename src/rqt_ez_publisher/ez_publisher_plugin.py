@@ -30,13 +30,28 @@ class EzPublisherPlugin(Plugin):
         args, unknowns = parser.parse_known_args(context.argv())
         self._loaded_settings = None
         if args.slider_file is not None:
-            self._loaded_settings = yaml.load(open(args.slider_file).read())
-            self.restore_from_dict(self._loaded_settings)
+            load_from_file(args.slider_file)
 
     def shutdown_plugin(self):
-        f = open('rqt_slider_settings.yaml', 'w')
-        f.write(yaml.safe_dump(self.save_to_dict(), encoding='utf-8', allow_unicode=True))
-        f.close()
+        pass
+
+    def save_to_file(self, file_path):
+        try:
+            f = open(file_path, 'w')
+            f.write(yaml.safe_dump(self.save_to_dict(),
+                                   encoding='utf-8', allow_unicode=True))
+            f.close()
+            rospy.loginfo('saved as %s' % file_path)
+        except IOError as e:
+            rospy.logerr('%s: Failed to save as %s' % (e, file_path))
+
+    def load_from_file(self, file_path):
+        if os.path.exists(file_path):
+            self._widget.clear_sliders()
+            self._loaded_settings = yaml.load(open(file_path).read())
+            self.restore_from_dict(self._loaded_settings)
+        else:
+            rospy.logerr('%s is not found' % file_path)
 
     def save_settings(self, plugin_settings, instance_settings):
         instance_settings.set_value(
@@ -96,7 +111,7 @@ class EzPublisherPlugin(Plugin):
         return save_dict
 
     def trigger_configuration(self):
-        dialog = config_dialog.ConfigDialog()
+        dialog = config_dialog.ConfigDialog(self)
         dialog.exec_()
 
     @staticmethod
@@ -109,5 +124,6 @@ class EzPublisherPlugin(Plugin):
     @staticmethod
     def add_arguments(parser):
         group = parser.add_argument_group('Options for rqt_ez_publisher plugin')
-        group.add_argument('--slider-file', type=lambda x: EzPublisherPlugin._isfile(parser, x),
+        group.add_argument('--slider-file',
+                           type=lambda x: EzPublisherPlugin._isfile(parser, x),
                            help="YAML setting file")
