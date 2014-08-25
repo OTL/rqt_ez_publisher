@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2014-08-25)
+------------------
 * Add save/load button in config dialog
 * Support yaml setting file
 * Support action in devel environment
