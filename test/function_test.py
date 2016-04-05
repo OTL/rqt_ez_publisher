@@ -50,6 +50,29 @@ class FunctionTest(unittest.TestCase):
         self.assertEqual(attr, None)
         self.assertEqual(index, None)
 
+    def test_find_topic_name_found_topic_only_nested(self):
+        topic, attr, index = ez_model.find_topic_name(
+            '/hoge', {'/hoge': 'type_a', '/hoga': 'type_b', '/hoge/nested': 'type_c'})
+        self.assertEqual(topic, '/hoge')
+        self.assertEqual(attr, None)
+        self.assertEqual(index, None)
+
+    def test_find_topic_name_found_topic_only_nested_by_nested(self):
+        topic, attr, index = ez_model.find_topic_name(
+            '/some/topic/again/data',
+            {'/some/topic/again': 'std_msgs/Float32', '/some/topic': 'std_msgs/Float32', '/this/works': 'std_msgs/Float32'})
+        self.assertEqual(topic, '/some/topic/again')
+#        self.assertEqual(attr, None)
+        self.assertEqual(index, None)
+
+    def test_find_topic_name_found_topic_only_nested_by_nested2(self):
+        topic, attr, index = ez_model.find_topic_name(
+            '/some/topic/again',
+            {'/some/topic/again': 'std_msgs/Float32', '/some/topic': 'std_msgs/Float32', '/this/works': 'std_msgs/Float32'})
+        self.assertEqual(topic, '/some/topic/again')
+        self.assertEqual(attr, None)
+        self.assertEqual(index, None)
+
     def test_find_topic_name_found_with_index(self):
         topic, attr, index = ez_model.find_topic_name(
             '/hoge/data[2]', {'/hoge': 'type_a', '/hoga': 'type_b'})
@@ -116,4 +139,3 @@ class FunctionTest(unittest.TestCase):
 if __name__ == '__main__':
     import rosunit
     rosunit.unitrun(PKG, 'function_test', FunctionTest)
-

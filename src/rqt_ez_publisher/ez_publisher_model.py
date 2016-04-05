@@ -104,17 +104,21 @@ def find_topic_name(full_text, topic_dict):
     if full_text in topic_dict:
         return (full_text, None, None)
     splited_text = full_text.split('/')[1:]
-    topic_name = ''
+    topic_name = full_text
+    topic_inside_variable_list = []
     while topic_name not in topic_dict and splited_text:
-        topic_name += '/' + splited_text[0]
-        splited_text = splited_text[1:]
-    if splited_text:
-        m = re.search('(\w+)\[([0-9]+)\]', splited_text[-1])
+        topic_name = topic_name.rstrip('/'.join(splited_text[-1]))
+        topic_inside_variable_list.append(splited_text[-1])
+        splited_text = splited_text[:-1]
+
+    topic_inside_variable_list.reverse()
+    if topic_name != '' and topic_inside_variable_list:
+        m = re.search('(\w+)\[([0-9]+)\]', topic_inside_variable_list[-1])
         if m:
-            splited_text[-1] = m.group(1)
-            return (topic_name, splited_text, int(m.group(2)))
+            topic_inside_variable_list[-1] = m.group(1)
+            return (topic_name, topic_inside_variable_list, int(m.group(2)))
         else:
-            return (topic_name, splited_text, None)
+            return (topic_name, topic_inside_variable_list, None)
     else:
         return (None, None, None)
 
