@@ -46,6 +46,8 @@ class ConfigDialog(QDialog):
         file_path, _ = QtGui.QFileDialog.getSaveFileNameAndFilter(
             self, 'Open file to save', filter="Setting File (*.yaml)")
         if file_path:
+            if '.' not in file_path:
+                file_path += ".yaml"
             self._plugin.save_to_file(file_path)
         self.close()
 
