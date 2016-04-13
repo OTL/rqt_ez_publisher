@@ -88,13 +88,13 @@ class EzPublisherPlugin(Plugin):
             try:
                 slider_setting = settings['settings'][slider.get_text()]
                 slider.set_range([slider_setting['min'], slider_setting['max']])
-                                  
+
                 slider.set_is_repeat(slider_setting['is_repeat'])
             except KeyError as e:
                 pass
         publisher.TopicPublisherWithTimer.publish_interval = (
             settings['publish_interval'])
-        
+
     def save_to_dict(self):
         save_dict = {}
         save_dict['texts'] = [x.get_text() for x in self._widget.get_sliders()]
@@ -120,7 +120,7 @@ class EzPublisherPlugin(Plugin):
             return arg
         else:
             parser.error("Setting file %s does not exist" % arg)
-                                                            
+
     @staticmethod
     def add_arguments(parser):
         group = parser.add_argument_group('Options for rqt_ez_publisher plugin')
