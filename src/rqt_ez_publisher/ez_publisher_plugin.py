@@ -87,7 +87,8 @@ class EzPublisherPlugin(Plugin):
         for slider in self._widget.get_sliders():
             try:
                 slider_setting = settings['settings'][slider.get_text()]
-                slider.set_range([slider_setting['min'], slider_setting['max']])
+                slider.set_range(
+                    [slider_setting['min'], slider_setting['max']])
 
                 slider.set_is_repeat(slider_setting['is_repeat'])
             except KeyError as e:
@@ -123,7 +124,8 @@ class EzPublisherPlugin(Plugin):
 
     @staticmethod
     def add_arguments(parser):
-        group = parser.add_argument_group('Options for rqt_ez_publisher plugin')
+        group = parser.add_argument_group(
+            'Options for rqt_ez_publisher plugin')
         group.add_argument('--slider-file',
                            type=lambda x: EzPublisherPlugin._isfile(parser, x),
                            help="YAML setting file")
