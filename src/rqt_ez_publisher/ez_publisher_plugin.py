@@ -30,7 +30,7 @@ class EzPublisherPlugin(Plugin):
         args, unknowns = parser.parse_known_args(context.argv())
         self._loaded_settings = None
         if args.slider_file is not None:
-            load_from_file(args.slider_file)
+            self.load_from_file(args.slider_file)
 
     def shutdown_plugin(self):
         pass
