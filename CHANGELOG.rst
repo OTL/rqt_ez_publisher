@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2016-05-06)
+------------------
 * Fix JointTrajectory issue #22
 * Apply pep8
 * Merge pull request #21 from felixduvallet/travis_ci
