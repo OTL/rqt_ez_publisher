@@ -2,6 +2,19 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix JointTrajectory issue #22
+* Apply pep8
+* Merge pull request #21 from felixduvallet/travis_ci
+  It seems nice!
+* Merge pull request #20 from felixduvallet/load_from_file_fix
+  fix problem with loading yaml slider config file
+* Add travis CI for package.
+* fix problem with loading yaml slider config file.
+* remove trailing whitespace.
+* Contributors: Felix Duvallet, Takashi Ogura
+
 0.3.1 (2016-04-11)
 ------------------
 * Fix save/load dialog
