@@ -6,6 +6,7 @@ import rospy
 import geometry_msgs.msg as geo_msgs
 import sensor_msgs.msg as sen_msgs
 
+import rqt_ez_publisher
 import rqt_ez_publisher.ez_publisher_model as ez_model
 from rqt_ez_publisher import quaternion_module
 
