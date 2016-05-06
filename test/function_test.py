@@ -87,6 +87,13 @@ class FunctionTest(unittest.TestCase):
         self.assertEqual(attr, None)
         self.assertEqual(index, None)
 
+    def test_find_topic_name_repeated(self):
+        topic, attr, index = ez_model.find_topic_name(
+            '/hoge/goal/goal', {'/hoge/goal': 'type_a', '/hoga': 'type_b'})
+        self.assertEqual(topic, '/hoge/goal')
+        self.assertEqual(attr, ['goal'])
+        self.assertEqual(index, None)
+
     def test_get_value_type(self):
         type, is_array = ez_model.get_value_type(
             'geometry_msgs/Twist', ['linear', 'x'])
