@@ -1,6 +1,6 @@
 from .. import ez_publisher_model as ez_model
 import math
-from python_qt_binding import QtGui
+from python_qt_binding import QtWidgets
 from ..widget import base_widget
 from . import rpy_value_widget
 
@@ -15,7 +15,7 @@ class RPYWidget(base_widget.BaseWidget):
         self._array_index = array_index
         self._topic_name = topic_name
         self._text = ez_model.make_text(topic_name, attributes, array_index)
-        self._vertical_layout = QtGui.QVBoxLayout()
+        self._vertical_layout = QtWidgets.QVBoxLayout()
         self._widgets = []
         for i in range(3):
             widget = rpy_value_widget.RPYValueWidget(

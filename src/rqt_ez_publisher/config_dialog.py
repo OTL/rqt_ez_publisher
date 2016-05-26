@@ -1,6 +1,6 @@
 from python_qt_binding import QtGui
-from python_qt_binding.QtGui import QDialog
-from python_qt_binding.QtGui import QDialogButtonBox
+from python_qt_binding.QtWidgets import QDialog
+from python_qt_binding.QtWidgets import QDialogButtonBox
 from . import publisher
 
 

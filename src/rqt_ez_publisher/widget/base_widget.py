@@ -1,7 +1,7 @@
-from python_qt_binding import QtGui
+from python_qt_binding.QtWidgets import QWidget
 
 
-class BaseWidget(QtGui.QWidget):
+class BaseWidget(QWidget):
 
     def __init__(self, topic_name, publisher, parent=None):
         super(BaseWidget, self).__init__(parent=None)
@@ -33,4 +33,3 @@ class BaseWidget(QtGui.QWidget):
     def update(self):
         pass
 
-#    def dump_to_yaml(self

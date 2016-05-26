@@ -1,12 +1,14 @@
 import rospy
-from python_qt_binding import QtGui
 from python_qt_binding import QtCore
+from python_qt_binding import QtGui
+from python_qt_binding import QtWidgets
+from python_qt_binding.QtWidgets import QWidget
 from rqt_ez_publisher import ez_publisher_model as ez_model
 from rqt_ez_publisher import widget as ez_widget
 from rqt_ez_publisher import publisher
 
 
-class EzPublisherWidget(QtGui.QWidget):
+class EzPublisherWidget(QWidget):
 
     '''Main widget of this GUI'''
 
@@ -16,7 +18,7 @@ class EzPublisherWidget(QtGui.QWidget):
         self._model = ez_model.EzPublisherModel(
             publisher.TopicPublisherWithTimer, modules=modules)
         self._sliders = []
-        QtGui.QWidget.__init__(self, parent=parent)
+        QWidget.__init__(self, parent=parent)
         self.setup_ui()
 
     def add_slider_from_combo(self):
@@ -118,17 +120,17 @@ class EzPublisherWidget(QtGui.QWidget):
             self._combo.addItem(topic)
 
     def setup_ui(self):
-        horizontal_layout = QtGui.QHBoxLayout()
-        reload_button = QtGui.QPushButton(parent=self)
+        horizontal_layout = QtWidgets.QHBoxLayout()
+        reload_button = QtWidgets.QPushButton(parent=self)
         reload_button.setMaximumWidth(30)
         reload_button.setIcon(
-            self.style().standardIcon(QtGui.QStyle.SP_BrowserReload))
+            self.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload))
         reload_button.clicked.connect(self.update_combo_items)
-        topic_label = QtGui.QLabel('topic(+data member) name')
-        clear_button = QtGui.QPushButton('all clear')
+        topic_label = QtWidgets.QLabel('topic(+data member) name')
+        clear_button = QtWidgets.QPushButton('all clear')
         clear_button.setMaximumWidth(200)
         clear_button.clicked.connect(self.clear_sliders)
-        self._combo = QtGui.QComboBox()
+        self._combo = QtWidgets.QComboBox()
         self._combo.setEditable(True)
         self.update_combo_items()
         self._combo.activated.connect(self.add_slider_from_combo)
@@ -136,7 +138,7 @@ class EzPublisherWidget(QtGui.QWidget):
         horizontal_layout.addWidget(topic_label)
         horizontal_layout.addWidget(self._combo)
         horizontal_layout.addWidget(clear_button)
-        self._main_vertical_layout = QtGui.QVBoxLayout()
+        self._main_vertical_layout = QtWidgets.QVBoxLayout()
         self._main_vertical_layout.addLayout(horizontal_layout)
         self._main_vertical_layout.setAlignment(
             horizontal_layout, QtCore.Qt.AlignTop)
@@ -148,8 +150,8 @@ class EzPublisherWidget(QtGui.QWidget):
 
 def main():
     import sys
-    app = QtGui.QApplication(sys.argv)
-    main_window = QtGui.QMainWindow()
+    app = QtWidgets.QApplication(sys.argv)
+    main_window = QtWidgets.QMainWindow()
     main_widget = EzPublisherWidget()
     main_window.setCentralWidget(main_widget)
     main_window.show()
