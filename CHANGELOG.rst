@@ -2,6 +2,15 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update config dialog for Qt5
+* Migrate to Qt5
+* Merge pull request `#23 <https://github.com/OTL/rqt_ez_publisher/issues/23>`_ from felixduvallet/travis_fix
+  Fix travis script
+* Fix python import path by sourcing devel/setup.bash.
+* Contributors: Felix Duvallet, Takashi Ogura
+
 0.3.2 (2016-05-06)
 ------------------
 * Fix JointTrajectory issue #22
