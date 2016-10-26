@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2016-10-26)
+------------------
 * Update config dialog for Qt5
 * Migrate to Qt5
 * Merge pull request `#23 <https://github.com/OTL/rqt_ez_publisher/issues/23>`_ from felixduvallet/travis_fix
