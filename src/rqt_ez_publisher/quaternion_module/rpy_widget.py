@@ -17,6 +17,7 @@ class RPYWidget(base_widget.BaseWidget):
         self._text = ez_model.make_text(topic_name, attributes, array_index)
         self._vertical_layout = QtWidgets.QVBoxLayout()
         self._widgets = []
+        self._parent = parent
         for i in range(3):
             widget = rpy_value_widget.RPYValueWidget(
                 topic_name, attributes, array_index, publisher, i, self)
@@ -50,3 +51,5 @@ class RPYWidget(base_widget.BaseWidget):
         if remove:
             self._widgets.remove(widget)
         self._vertical_layout.removeWidget(widget)
+        if not self._widgets:
+            self._parent.close_slider(self)
