@@ -83,7 +83,7 @@ class EzPublisherPlugin(Plugin):
         if interval:
             publisher.TopicPublisherWithTimer.publish_interval = int(interval)
         configurable = instance_settings.value('configurable')
-        if configurable:
+        if configurable is not None:
             self.configurable = bool(configurable)
             self._widget.set_configurable(self.configurable)
 
