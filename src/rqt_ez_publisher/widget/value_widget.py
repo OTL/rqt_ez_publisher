@@ -35,12 +35,12 @@ class ValueWidget(base_widget.BaseWidget):
         self._repeat_box = QtWidgets.QCheckBox()
         self._repeat_box.stateChanged.connect(self.repeat_changed)
         self._repeat_box.setChecked(publisher.is_repeating())
+        self._publish_button = QtWidgets.QPushButton('Publish')
+        self._publish_button.clicked.connect(publisher.publish)
         self._horizontal_layout.addWidget(self._topic_label)
         self._horizontal_layout.addWidget(self.close_button)
         self._horizontal_layout.addWidget(self.up_button)
         self._horizontal_layout.addWidget(self.down_button)
-        self._horizontal_layout.addWidget(repeat_label)
-        self._horizontal_layout.addWidget(self._repeat_box)
         if self._array_index is not None:
             self.add_button = QtWidgets.QPushButton('+')
             self.add_button.setMaximumWidth(30)
@@ -54,6 +54,9 @@ class ValueWidget(base_widget.BaseWidget):
         self.down_button.clicked.connect(
             lambda x: self._parent.move_down_widget(self))
         self.setup_ui(self._text)
+        self._horizontal_layout.addWidget(self._publish_button)
+        self._horizontal_layout.addWidget(repeat_label)
+        self._horizontal_layout.addWidget(self._repeat_box)
 
     def repeat_changed(self, state):
         self.set_is_repeat(state == 2)
@@ -78,3 +81,10 @@ class ValueWidget(base_widget.BaseWidget):
 
     def set_range(self, range):
         pass
+
+    def set_configurable(self, value):
+        self.down_button.setVisible(value)
+        self.up_button.setVisible(value)
+        self.close_button.setVisible(value)
+        if self.add_button:
+            self.add_button.setVisible(value)

@@ -1,4 +1,5 @@
 import tf.transformations
+import rospy
 from ..widget import double_value_widget
 from .. import ez_publisher_model as ez_model
 

@@ -119,29 +119,37 @@ class EzPublisherWidget(QWidget):
         for topic in self._model.get_topic_names():
             self._combo.addItem(topic)
 
+    def set_configurable(self, value):
+        self._reload_button.setVisible(value)
+        self._topic_label.setVisible(value)
+        self._clear_button.setVisible(value)
+        self._combo.setVisible(value)
+        for slider in self._sliders:
+            slider.set_configurable(value)
+
     def setup_ui(self):
-        horizontal_layout = QtWidgets.QHBoxLayout()
-        reload_button = QtWidgets.QPushButton(parent=self)
-        reload_button.setMaximumWidth(30)
-        reload_button.setIcon(
+        self._horizontal_layout = QtWidgets.QHBoxLayout()
+        self._reload_button = QtWidgets.QPushButton(parent=self)
+        self._reload_button.setMaximumWidth(30)
+        self._reload_button.setIcon(
             self.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload))
-        reload_button.clicked.connect(self.update_combo_items)
-        topic_label = QtWidgets.QLabel('topic(+data member) name')
-        clear_button = QtWidgets.QPushButton('all clear')
-        clear_button.setMaximumWidth(200)
-        clear_button.clicked.connect(self.clear_sliders)
+        self._reload_button.clicked.connect(self.update_combo_items)
+        self._topic_label = QtWidgets.QLabel('topic(+data member) name')
+        self._clear_button = QtWidgets.QPushButton('all clear')
+        self._clear_button.setMaximumWidth(200)
+        self._clear_button.clicked.connect(self.clear_sliders)
         self._combo = QtWidgets.QComboBox()
         self._combo.setEditable(True)
         self.update_combo_items()
         self._combo.activated.connect(self.add_slider_from_combo)
-        horizontal_layout.addWidget(reload_button)
-        horizontal_layout.addWidget(topic_label)
-        horizontal_layout.addWidget(self._combo)
-        horizontal_layout.addWidget(clear_button)
+        self._horizontal_layout.addWidget(self._reload_button)
+        self._horizontal_layout.addWidget(self._topic_label)
+        self._horizontal_layout.addWidget(self._combo)
+        self._horizontal_layout.addWidget(self._clear_button)
         self._main_vertical_layout = QtWidgets.QVBoxLayout()
-        self._main_vertical_layout.addLayout(horizontal_layout)
+        self._main_vertical_layout.addLayout(self._horizontal_layout)
         self._main_vertical_layout.setAlignment(
-            horizontal_layout, QtCore.Qt.AlignTop)
+            self._horizontal_layout, QtCore.Qt.AlignTop)
         self.setLayout(self._main_vertical_layout)
 
     def shutdown(self):

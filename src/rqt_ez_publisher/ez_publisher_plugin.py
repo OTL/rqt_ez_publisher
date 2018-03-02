@@ -29,6 +29,7 @@ class EzPublisherPlugin(Plugin):
         EzPublisherPlugin.add_arguments(parser)
         args, unknowns = parser.parse_known_args(context.argv())
         self._loaded_settings = None
+        self.configurable = True
         if args.slider_file is not None:
             self.load_from_file(args.slider_file)
 
@@ -63,6 +64,7 @@ class EzPublisherPlugin(Plugin):
                 slider.get_text() + '_range', slider.get_range())
             instance_settings.set_value(
                 slider.get_text() + '_is_repeat', slider.is_repeat())
+        instance_settings.set_value('configurable', self.configurable)
 
     def restore_settings(self, plugin_settings, instance_settings):
         if self._loaded_settings is not None:
@@ -80,6 +82,10 @@ class EzPublisherPlugin(Plugin):
         interval = instance_settings.value('publish_interval')
         if interval:
             publisher.TopicPublisherWithTimer.publish_interval = int(interval)
+        configurable = instance_settings.value('configurable')
+        if configurable is not None:
+            self.configurable = bool(configurable)
+            self._widget.set_configurable(self.configurable)
 
     def restore_from_dict(self, settings):
         for text in settings['texts']:
@@ -114,6 +120,8 @@ class EzPublisherPlugin(Plugin):
     def trigger_configuration(self):
         dialog = config_dialog.ConfigDialog(self)
         dialog.exec_()
+        self.configurable = dialog.configurable_checkbox.isChecked()
+        self._widget.set_configurable(self.configurable)
 
     @staticmethod
     def _isfile(parser, arg):
