@@ -33,3 +33,5 @@ class BaseWidget(QWidget):
     def update(self):
         pass
 
+    def set_configurable(self, value):
+        pass

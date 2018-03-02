@@ -44,3 +44,9 @@ class RPYWidget(base_widget.BaseWidget):
     def update(self):
         for widget in self._widgets:
             widget.update()
+
+    def close_slider(self, widget, remove=True):
+        widget.hide()
+        if remove:
+            self._widgets.remove(widget)
+        self._vertical_layout.removeWidget(widget)
