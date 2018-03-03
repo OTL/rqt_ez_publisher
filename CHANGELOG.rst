@@ -2,6 +2,10 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2017-03-03)
+------------------
+* Add congigure checkbox and publish button by rein, thank you
+
 0.4.0 (2016-10-26)
 ------------------
 * Update config dialog for Qt5
