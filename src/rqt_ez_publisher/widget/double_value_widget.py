@@ -8,6 +8,7 @@ class DoubleValueWidget(value_widget.ValueWidget):
     LCD_HEIGHT = 35
     DEFAULT_MAX_VALUE = 1.0
     DEFAULT_MIN_VALUE = -1.0
+    valueNow = 0.0
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent,
                  label_text=None):
@@ -19,6 +20,7 @@ class DoubleValueWidget(value_widget.ValueWidget):
     def set_value(self, value):
         self._lcd.display(value)
         self.publish_value(value)
+        self.valueNow = value
 
     def value_to_slider(self, value):
         return (value - self._min_spin_box.value()) / (

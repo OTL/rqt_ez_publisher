@@ -6,6 +6,7 @@ import value_widget
 class IntValueWidget(value_widget.ValueWidget):
 
     LCD_HEIGHT = 35
+    valueNow = 0
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = int
@@ -15,6 +16,7 @@ class IntValueWidget(value_widget.ValueWidget):
     def slider_changed(self, value):
         self._lcd.display(value)
         self.publish_value(value)
+        self.valueNow = value
 
     def setup_ui(self, name, max_value=100000, min_value=-100000,
                  default_max_value=100, default_min_value=-100,

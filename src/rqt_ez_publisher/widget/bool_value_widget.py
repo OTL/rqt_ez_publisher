@@ -4,12 +4,15 @@ import value_widget
 
 class BoolValueWidget(value_widget.ValueWidget):
 
+    valueNow = False
+
     def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = bool
         super(BoolValueWidget, self).__init__(
             topic_name, attributes, array_index, publisher, parent)
 
     def state_changed(self, state):
+        self.valueNow = self._check_box.isChecked()
         self.publish_value(self._check_box.isChecked())
 
     def setup_ui(self, name):
