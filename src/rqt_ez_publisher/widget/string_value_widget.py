@@ -4,12 +4,15 @@ import value_widget
 
 class StringValueWidget(value_widget.ValueWidget):
 
+    valueNow = ''
+
     def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = str
         super(StringValueWidget, self).__init__(
             topic_name, attributes, array_index, publisher, parent)
 
     def input_text(self):
+        self.valueNow = str(self._line_edit.text())
         self.publish_value(str(self._line_edit.text()))
 
     def setup_ui(self, name):

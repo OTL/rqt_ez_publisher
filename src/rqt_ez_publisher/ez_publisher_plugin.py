@@ -95,6 +95,14 @@ class EzPublisherPlugin(Plugin):
                 slider_setting = settings['settings'][slider.get_text()]
                 slider.set_range(
                     [slider_setting['min'], slider_setting['max']])
+                if(type(slider).__name__ == 'DoubleValueWidget'):
+                    slider._slider.setValue(slider.value_to_slider(slider_setting['value']))
+                elif(type(slider).__name__ == 'IntValueWidget' or type(slider).__name__ == 'UIntValueWidget'):
+                    slider._slider.setValue(slider_setting['value'])
+                elif(type(slider).__name__ == 'StringValueWidget'):
+                    slider._line_edit.setText(slider_setting['value'])
+                elif(type(slider).__name__ == 'BoolValueWidget'):
+                    slider._check_box.setChecked(slider_setting['value'])
 
                 slider.set_is_repeat(slider_setting['is_repeat'])
             except KeyError as e:
@@ -103,6 +111,11 @@ class EzPublisherPlugin(Plugin):
             settings['publish_interval'])
 
     def save_to_dict(self):
+        slider_types_list = ['DoubleValueWidget',
+                             'IntValueWidget',
+                             'UIntValueWidget',
+                             'StringValueWidget',
+                             'BoolValueWidget']
         save_dict = {}
         save_dict['texts'] = [x.get_text() for x in self._widget.get_sliders()]
         save_dict['publish_interval'] = (
@@ -115,6 +128,9 @@ class EzPublisherPlugin(Plugin):
             save_dict['settings'][slider.get_text()]['max'] = range_max
             save_dict['settings'][slider.get_text()]['is_repeat'] = (
                 slider.is_repeat())
+            if(type(slider).__name__ in slider_types_list):
+                save_dict['settings'][slider.get_text()]['value'] = (
+                    slider.valueNow)
         return save_dict
 
     def trigger_configuration(self):
