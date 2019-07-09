@@ -51,9 +51,15 @@ def set_msg_attribute_value(msg_instance, topic_name, msg_type, attributes,
             message_target, topic_name, attributes[:-1])
     if array_index is not None:
         array = message_target.__getattribute__(attributes[-1])
-        while len(array) <= array_index:
-            array.append(msg_type())
-        array[array_index] = value
+        # when the array is uint8, it becomes str instead of array.
+        if isinstance(array, str):
+            if len(array) <= array_index:
+                array += chr(0) * (array_index - len(array) + 1)
+            array = array[0:array_index] + chr(value) + array[array_index + 1:]
+        else:
+            while len(array) <= array_index:
+                array.append(msg_type())
+            array[array_index] = value
         message_target.__setattr__(attributes[-1], array)
     else:
         message_target.__setattr__(attributes[-1], value)
