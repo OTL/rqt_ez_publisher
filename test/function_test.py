@@ -156,7 +156,7 @@ class FunctionTest(unittest.TestCase):
         self.assertEqual(twi.linear.x, 0.1)
         self.assertEqual(ez_model.get_msg_attribute_value(twi, '/twist', [u'linear', u'x']), 0.1)
 
- 
- if __name__ == '__main__':
+
+if __name__ == '__main__':
     import rosunit
     rosunit.unitrun(PKG, 'function_test', FunctionTest)
