@@ -155,6 +155,18 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(strings[2], '/pose/position/z')
         self.assertEqual(strings[3], '/pose/orientation')
 
+    def test_set_msg_attribute_value_uint8_array(self):
+        img = sen_msgs.CompressedImage()
+        ez_model.set_msg_attribute_value(img, '/compressed_image', int, [u'data'], 1, 3)
+        self.assertEqual(len(img.data), 2)
+        self.assertEqual(img.data[0], chr(0))
+        self.assertEqual(img.data[1], chr(3))
+
+    def test_set_msg_attribute_value(self):
+        twi = geo_msgs.Twist()
+        ez_model.set_msg_attribute_value(twi, '/twist', float, [u'linear', u'x'], None, 0.1)
+        self.assertEqual(twi.linear.x, 0.1)
+        self.assertEqual(ez_model.get_msg_attribute_value(twi, '/twist', [u'linear', u'x']), 0.1)
 
 
 if __name__ == '__main__':
