@@ -1,5 +1,5 @@
 from python_qt_binding import QtWidgets
-import value_widget
+from . import value_widget
 
 
 class BoolValueWidget(value_widget.ValueWidget):

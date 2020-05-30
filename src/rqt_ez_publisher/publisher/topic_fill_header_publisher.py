@@ -1,5 +1,5 @@
 import rospy
-import topic_publisher
+from . import topic_publisher
 import tf2_msgs.msg
 
 

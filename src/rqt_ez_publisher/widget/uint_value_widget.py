@@ -1,4 +1,4 @@
-import int_value_widget
+from . import int_value_widget
 
 
 class UIntValueWidget(int_value_widget.IntValueWidget):

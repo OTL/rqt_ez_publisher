@@ -1,6 +1,6 @@
 from python_qt_binding import QtCore
 from python_qt_binding import QtWidgets
-import value_widget
+from . import value_widget
 
 
 class IntValueWidget(value_widget.ValueWidget):

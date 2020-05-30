@@ -1,1 +1,1 @@
-from ez_publisher_plugin import EzPublisherPlugin
+from .ez_publisher_plugin import EzPublisherPlugin
