@@ -2,6 +2,20 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use 1000000 as max value
+* Changes for noetic
+* Move test to model_ros_test.py because it needs roscore
+* Fix test
+* Add test for set_msg_attribute_value
+* Fix uint8 array
+  uint8 becomes str instead of array.
+* Merge branch 'melodic-devel' of https://github.com/OTL/rqt_ez_publisher into melodic-devel
+* Update .travis.yml for melodic release
+* Update .travis.yml for melodic release
+* Contributors: Takashi Ogura
+
 0.5.0 (2017-03-03)
 ------------------
 * Add congigure checkbox and publish button by rein, thank you
