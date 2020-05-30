@@ -2,8 +2,8 @@
 Changelog for package rqt_ez_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2020-05-30)
+------------------
 * Use 1000000 as max value
 * Changes for noetic
 * Move test to model_ros_test.py because it needs roscore
