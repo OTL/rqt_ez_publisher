@@ -33,16 +33,18 @@ class DoubleValueWidget(value_widget.ValueWidget):
         self.set_value(self.slider_to_value(val))
 
     def setup_ui(self, name):
+        MAX_VALUE=1000000
+        MIN_VALUE=-1000000
         self._min_spin_box = QtWidgets.QDoubleSpinBox()
-        self._min_spin_box.setMaximum(10000)
-        self._min_spin_box.setMinimum(-10000)
+        self._min_spin_box.setMaximum(MAX_VALUE)
+        self._min_spin_box.setMinimum(MIN_VALUE)
         self._min_spin_box.setValue(self.DEFAULT_MIN_VALUE)
         self._slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self._slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
         self._slider.valueChanged.connect(self.slider_changed)
         self._max_spin_box = QtWidgets.QDoubleSpinBox()
-        self._max_spin_box.setMaximum(10000)
-        self._max_spin_box.setMinimum(-10000)
+        self._max_spin_box.setMaximum(MAX_VALUE)
+        self._max_spin_box.setMinimum(MIN_VALUE)
         self._max_spin_box.setValue(self.DEFAULT_MAX_VALUE)
         self._lcd = QtWidgets.QLCDNumber()
         self._lcd.setMaximumHeight(self.LCD_HEIGHT)
