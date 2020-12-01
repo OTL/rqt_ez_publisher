@@ -39,8 +39,7 @@ class EzPublisherPlugin(Plugin):
     def save_to_file(self, file_path):
         try:
             f = open(file_path, 'w')
-            f.write(yaml.safe_dump(self.save_to_dict(),
-                                   encoding='utf-8', allow_unicode=True))
+            yaml.dump(self.save_to_dict(),f)
             f.close()
             rospy.loginfo('saved as %s' % file_path)
         except IOError as e:
