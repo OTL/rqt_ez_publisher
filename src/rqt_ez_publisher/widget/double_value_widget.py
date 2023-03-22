@@ -1,9 +1,9 @@
 from python_qt_binding import QtCore
 from python_qt_binding import QtWidgets
-import value_widget
+from .value_widget import ValueWidget
 
 
-class DoubleValueWidget(value_widget.ValueWidget):
+class DoubleValueWidget(ValueWidget):
 
     LCD_HEIGHT = 35
     DEFAULT_MAX_VALUE = 1.0

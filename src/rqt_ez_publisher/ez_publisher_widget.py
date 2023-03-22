@@ -1,11 +1,20 @@
 import rospy
 from python_qt_binding import QtCore
-from python_qt_binding import QtGui
+# from python_qt_binding import QtGui
 from python_qt_binding import QtWidgets
 from python_qt_binding.QtWidgets import QWidget
-from rqt_ez_publisher import ez_publisher_model as ez_model
-from rqt_ez_publisher import widget as ez_widget
-from rqt_ez_publisher import publisher
+from .ez_publisher_model import (
+    EzPublisherModel,
+    make_text,
+)
+from .widget import (
+    BoolValueWidget,
+    DoubleValueWidget,
+    IntValueWidget,
+    StringValueWidget,
+    UIntValueWidget,
+)
+from . import publisher
 
 
 class EzPublisherWidget(QWidget):
@@ -15,7 +24,7 @@ class EzPublisherWidget(QWidget):
     sig_sysmsg = QtCore.Signal(str)
 
     def __init__(self, parent=None, modules=[]):
-        self._model = ez_model.EzPublisherModel(
+        self._model = EzPublisherModel(
             publisher.TopicPublisherWithTimer, modules=modules)
         self._sliders = []
         QWidget.__init__(self, parent=parent)
@@ -32,20 +41,20 @@ class EzPublisherWidget(QWidget):
 
     def get_next_index(self, topic_name, attributes):
         array_index = 0
-        text = ez_model.make_text(topic_name, attributes, array_index)
+        text = make_text(topic_name, attributes, array_index)
         while text in [x.get_text() for x in self._sliders]:
             array_index += 1
-            text = ez_model.make_text(topic_name, attributes, array_index)
+            text = make_text(topic_name, attributes, array_index)
         return array_index
 
     def add_widget(self, output_type, topic_name, attributes, array_index,
                    position=None):
         widget_class = None
-        type_class_dict = {float: ez_widget.DoubleValueWidget,
-                           int: ez_widget.IntValueWidget,
-                           'uint': ez_widget.UIntValueWidget,
-                           bool: ez_widget.BoolValueWidget,
-                           str: ez_widget.StringValueWidget}
+        type_class_dict = {float: DoubleValueWidget,
+                           int: IntValueWidget,
+                           'uint': UIntValueWidget,
+                           bool: BoolValueWidget,
+                           str: StringValueWidget}
         for module in self._model.get_modules():
             type_class_dict[
                 module.get_msg_string()] = module.get_widget_class()

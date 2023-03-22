@@ -1,10 +1,10 @@
 import os
 import rospy
 import yaml
-from . import ez_publisher_widget
-from . import publisher
-from . import config_dialog
-from . import quaternion_module
+from .config_dialog import ConfigDialog
+from .ez_publisher_widget import EzPublisherWidget
+from .quaternion_module import QuaternionModule
+from .publisher import TopicPublisherWithTimer
 from rqt_py_common.plugin_container_widget import PluginContainerWidget
 from qt_gui.plugin import Plugin
 
@@ -16,8 +16,8 @@ class EzPublisherPlugin(Plugin):
     def __init__(self, context):
         super(EzPublisherPlugin, self).__init__(context)
         self.setObjectName('EzPublisher')
-        modules = [quaternion_module.QuaternionModule()]
-        self._widget = ez_publisher_widget.EzPublisherWidget(modules=modules)
+        modules = [QuaternionModule()]
+        self._widget = EzPublisherWidget(modules=modules)
         self._widget.setObjectName('EzPublisherPluginUi')
         self.mainwidget = PluginContainerWidget(self._widget, True, False)
         if context.serial_number() > 1:
@@ -58,7 +58,7 @@ class EzPublisherPlugin(Plugin):
         instance_settings.set_value(
             'texts', [x.get_text() for x in self._widget.get_sliders()])
         instance_settings.set_value(
-            'publish_interval', publisher.TopicPublisherWithTimer.publish_interval)
+            'publish_interval', TopicPublisherWithTimer.publish_interval)
         for slider in self._widget.get_sliders():
             instance_settings.set_value(
                 slider.get_text() + '_range', slider.get_range())
@@ -81,7 +81,7 @@ class EzPublisherPlugin(Plugin):
             slider.set_is_repeat(is_repeat == 'true')
         interval = instance_settings.value('publish_interval')
         if interval:
-            publisher.TopicPublisherWithTimer.publish_interval = int(interval)
+            TopicPublisherWithTimer.publish_interval = int(interval)
         configurable = instance_settings.value('configurable')
         if configurable is not None:
             self.configurable = bool(configurable)
@@ -99,14 +99,14 @@ class EzPublisherPlugin(Plugin):
                 slider.set_is_repeat(slider_setting['is_repeat'])
             except KeyError as e:
                 pass
-        publisher.TopicPublisherWithTimer.publish_interval = (
+        TopicPublisherWithTimer.publish_interval = (
             settings['publish_interval'])
 
     def save_to_dict(self):
         save_dict = {}
         save_dict['texts'] = [x.get_text() for x in self._widget.get_sliders()]
         save_dict['publish_interval'] = (
-            publisher.TopicPublisherWithTimer.publish_interval)
+            TopicPublisherWithTimer.publish_interval)
         save_dict['settings'] = {}
         for slider in self._widget.get_sliders():
             save_dict['settings'][slider.get_text()] = {}
@@ -118,7 +118,7 @@ class EzPublisherPlugin(Plugin):
         return save_dict
 
     def trigger_configuration(self):
-        dialog = config_dialog.ConfigDialog(self)
+        dialog = ConfigDialog(self)
         dialog.exec_()
         self.configurable = dialog.configurable_checkbox.isChecked()
         self._widget.set_configurable(self.configurable)
