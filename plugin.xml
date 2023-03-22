@@ -1,7 +1,7 @@
 <library path="src">
-  <class name="EzPublisher" type="rqt_ez_publisher.EzPublisherPlugin" base_class_type="rqt_gui_py::Plugin">
+  <class name="EzPublisher" type="rqt_ez_publisher.ez_publisher_plugin.EzPublisherPlugin" base_class_type="rqt_gui_py::Plugin">
     <description>
-      An example Python GUI plugin to create a great user interface.
+      Easily publish messages to a topic
     </description>
     <qtgui>
       <group>

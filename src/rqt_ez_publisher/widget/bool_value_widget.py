@@ -1,8 +1,8 @@
 from python_qt_binding import QtWidgets
-import value_widget
+from .value_widget import ValueWidget
 
 
-class BoolValueWidget(value_widget.ValueWidget):
+class BoolValueWidget(ValueWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent):
         self._type = bool

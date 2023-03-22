@@ -1,7 +1,7 @@
-import int_value_widget
+from .int_value_widget import IntValueWidget
 
 
-class UIntValueWidget(int_value_widget.IntValueWidget):
+class UIntValueWidget(IntValueWidget):
 
     def __init__(self, topic_name, attributes, array_index, publisher, parent):
         super(UIntValueWidget, self).__init__(

@@ -1,9 +1,9 @@
 import rospy
-import topic_publisher
 import tf2_msgs.msg
+from .topic_publisher import TopicPublisher
 
 
-class TopicFillHeaderPublisher(topic_publisher.TopicPublisher):
+class TopicFillHeaderPublisher(TopicPublisher):
 
     def __init__(self, topic_name, message_class):
         super(TopicFillHeaderPublisher, self).__init__(

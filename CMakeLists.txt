@@ -17,6 +17,7 @@ install(FILES
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-install(PROGRAMS scripts/rqt_ez_publisher
+catkin_install_python(PROGRAMS
+  scripts/rqt_ez_publisher
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -1,10 +1,10 @@
-import topic_fill_header_publisher
 from python_qt_binding import QtCore
+from .topic_fill_header_publisher import TopicFillHeaderPublisher
 
 DEFAULT_PUBLISH_INTERVAL = 100
 
 
-class TopicPublisherWithTimer(topic_fill_header_publisher.TopicFillHeaderPublisher):
+class TopicPublisherWithTimer(TopicFillHeaderPublisher):
 
     publish_interval = DEFAULT_PUBLISH_INTERVAL
 
