@@ -48,7 +48,7 @@ class EzPublisherPlugin(Plugin):
     def load_from_file(self, file_path):
         if os.path.exists(file_path):
             self._widget.clear_sliders()
-            self._loaded_settings = yaml.load(open(file_path).read())
+            self._loaded_settings = yaml.safe_load(open(file_path).read())
             self.restore_from_dict(self._loaded_settings)
         else:
             rospy.logerr('%s is not found' % file_path)
